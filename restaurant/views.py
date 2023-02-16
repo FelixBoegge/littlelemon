@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -30,7 +30,7 @@ class MenuView(APIView):
 
 class SingleMenuItemView(APIView):
     def get(self, request, pk):
-        item = Menu.objects.filter(pk=pk)
+        item = get_object_or_404(Menu, pk=pk)
         serializer = MenuSerializer(item)
         return Response(serializer.data)
 
