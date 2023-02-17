@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from djoser.serializers import UserSerializer
 from .models import Booking, Menu
 
 
@@ -15,7 +16,7 @@ class MenuSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 
-class UserSerialzer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'groups']
+class UserSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        #required_fields = fields

@@ -146,4 +146,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-DJOSER = {'USER_ID_FIELD': 'username'}
+DJOSER = {
+    'USER_ID_FIELD': 'username',
+    
+    'SERIALIZERS': {
+        'user': 'restaurant.serializers.UserSerializer',
+        'user_create': 'restaurant.serializers.UserSerializer',
+    },
+}
