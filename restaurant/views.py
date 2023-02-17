@@ -38,6 +38,27 @@ class SingleMenuItemView(APIView):
         serializer = MenuSerializer(item)
         return Response(serializer.data)
     
+    def put(self, request, pk):
+        item = get_object_or_404(Menu, pk=pk)
+        serializer = MenuSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'successfully replaced',
+                             'data': serializer.data})
+    
+    def patch(self, request, pk):
+        item = get_object_or_404(Menu, pk=pk)
+        serializer = MenuSerializer(item, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'successfully modified',
+                             'data': serializer.data})
+    
+    def delete(self, request, pk):
+        get_object_or_404(Menu, pk=pk).delete()
+        return Response({'status': 'successfully deleted'})
+    
+    
 
 def index(request):
     return render(request, 'index.html', {})
