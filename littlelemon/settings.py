@@ -151,6 +151,6 @@ DJOSER = {
     
     'SERIALIZERS': {
         'user': 'restaurant.serializers.UserSerializer',
-        'user_create': 'restaurant.serializers.UserSerializer',
+        #'user_create': 'restaurant.serializers.UserCreateSerializer',
     },
 }

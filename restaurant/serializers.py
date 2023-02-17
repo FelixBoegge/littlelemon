@@ -19,4 +19,8 @@ class MenuSerializer(serializers.ModelSerializer):
 class UserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
-        #required_fields = fields
+
+
+class UserCreateSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']

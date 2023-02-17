@@ -15,7 +15,7 @@ class BookingViewSet(ModelViewSet):
 
 
 class MenuView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     
     def get(self, request):
         items = Menu.objects.all()
@@ -31,7 +31,7 @@ class MenuView(APIView):
             
 
 class SingleMenuItemView(APIView):
-    permission_classes = [IsAuthenticated]
+    #permission_classes = [IsAuthenticated]
     
     def get(self, request, pk):
         item = get_object_or_404(Menu, pk=pk)
