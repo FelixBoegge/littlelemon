@@ -8,7 +8,6 @@ class UserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
-
 class UserRegistrationSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password']
@@ -16,25 +15,28 @@ class UserRegistrationSerializer(UserCreateSerializer):
         
 class BookingSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    booking_time = serializers.SerializerMethodField(method_name='convert_booking_slot')
     class Meta:
         model = Booking
-        fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_time']
+        fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_slot']
         extra_kwargs = {
             'booking_slot': {'min_value': 10, 'max_value': 22}
-        }
+        }       
+   
         
-    def convert_booking_slot(self, obj):
-        if obj.booking_slot <= 12:
-            ampm = ' AM'
-            time = obj.booking_slot
-        else:
-            ampm = ' PM'
-            time = obj.booking_slot - 12
-        return str(time) + ampm
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'title']
         
 
 class MenuItemSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
     class Meta:
         model = MenuItem
-        fields = '__all__'
+        fields = ['id', 'title', 'category', 'price', 'inventory', 'featured']
+        
+
+class MenuItemCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuItem
+        fields = ['id', 'title','category', 'price', 'inventory', 'featured']
