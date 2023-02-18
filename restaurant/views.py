@@ -5,9 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
 
 from .models import Booking, Category, MenuItem, Cart, Order, OrderItem 
-from .serializers import UserSerializer, BookingSerializer, CategorySerializer, MenuItemSerializer, MenuItemCreateSerializer
+from .serializers import UserSerializer, BookingSerializer, CategorySerializer, MenuItemSerializer, MenuItemCreateSerializer, CartSerializer, CartCreateSerializer
 
 
 class ManagerView(APIView):
@@ -172,3 +173,44 @@ class SingleMenuItemView(APIView):
     def delete(self, request, pk):
         get_object_or_404(MenuItem, pk=pk).delete()
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
+    
+    
+class CartView(APIView):
+    permission_classes = [IsAuthenticated
+                          ]
+    def get(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        carts = Cart.objects.filter(user=user_id)
+        serializer = CartSerializer(carts, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+        
+    def post(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        menuitem_id = request.data['menuitem']
+        quantity = int(request.data['quantity'])
+        unit_price = float(MenuItem.objects.filter(pk=menuitem_id).values('price')[0]['price'])
+        price = quantity * unit_price
+        cart_item = {
+            'user': user_id,
+            'menuitem': menuitem_id,
+            'quantity': quantity,
+            'unit_price': unit_price,
+            'price': price
+        }
+        serializer = CartCreateSerializer(data=cart_item)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': 'successfully added cartitem',
+                             'data': serializer.data}, status.HTTP_201_CREATED)
+        return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        carts = Cart.objects.filter(user=user_id)
+        num_carts = len(carts)
+        if num_carts == 0:
+            return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
+        carts.delete()
+        return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
+
+

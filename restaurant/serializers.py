@@ -40,3 +40,17 @@ class MenuItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
         fields = ['id', 'title','category', 'price', 'inventory', 'featured']
+        
+
+class CartSerializer(serializers.ModelSerializer):
+    menuitem = serializers.CharField(source='menuitem.title', read_only=True)
+    user = UserSerializer(read_only=True)
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'menuitem', 'quantity', 'unit_price', 'price']
+
+class CartCreateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'menuitem', 'quantity', 'unit_price', 'price']
