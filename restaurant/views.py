@@ -1,6 +1,10 @@
 from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.core import serializers
 from django.contrib.auth.models import User, Group
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -8,14 +12,17 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 
-from .models import Booking, Category, MenuItem, Cart, Order, OrderItem 
+from .models import Booking, Category, MenuItem, Cart, Order 
 from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
                           MenuItemSerializer, MenuItemCreateSerializer,
                           CartSerializer, CartCreateSerializer,
-                          OrderItemSerializer, OrderItemCreateSerialzer,
+                          OrderItemCreateSerialzer,
                           OrderSerializer, OrderCreateSerializer)
+from .forms import BookingForm
 
-import datetime
+from datetime import datetime
+import json
+
 
 class ManagerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -78,18 +85,84 @@ class DeliveryView(APIView):
         delivery_guys.user_set.remove(old_delivery_guy)
         return Response({'status': f"'{old_delivery_guy.username}' was removed to delivery group"}, status.HTTP_200_OK)
 
+class HomeView(APIView):
+    def get(self, request):
+        return render(request, 'index.html')
 
-def index(request):
-    return render(request, 'index.html', {})
+class AboutView(APIView):
+    def get(self, request):
+        return render(request, 'about.html')
+
+class ReservationsView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        date = request.GET.get('date',datetime.today().date())
+        bookings = Booking.objects.all()
+        return render(request, 'bookings.html', {'bookings': bookings})
+
+class BookView(APIView):
+    form = BookingForm()
+    
+    def get(self, request):
+        return render(request, 'book.html')
+    
+    def post(self, request):
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            form.save()
+        context = {'form':form}
+        return render(request, 'book.html', context)
+
+class MenuView(APIView):
+    def get(self, request):
+        menus = MenuItem.objects.all()
+        return render(request, 'menu.html', {'menu': menus})
+
+class SingleMenuView(APIView):
+    def get(self, request, pk):
+        if pk: 
+            menu_item = MenuItem.objects.get(pk=pk) 
+        else: 
+            menu_item = "" 
+        return render(request, 'menu_item.html', {"menu_item": menu_item}) 
+
+class BookingsView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        data = json.load(request)
+        exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
+            booking_slot=request.data['booking_slot']).exists()
+        if exist==False:
+            booking = Booking(
+                name=data['name'],
+                user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
+                num_guests=data['num_guests'],
+                booking_date=data['booking_date'],
+                booking_slot=data['booking_slot'],
+            )
+            print('#######', booking, type(booking))
+            serializer = BookingSerializer(data=booking)
+            if serializer.is_valid():
+                booking.save()
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+    
+    def get(self, request):
+        date = request.GET.get('date',datetime.today().date())
+        bookings = Booking.objects.all().filter(booking_date=date)
+        #serialized_bookings = BookingSerializer(bookings, many=True)
+        serialized_bookings = serializers.serialize('json', bookings)
+        return HttpResponse(serialized_bookings, content_type='application/json')
 
 
 class BookingView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
-        bookings = Booking.objects.all()
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+    #def get(self, request):
+    #    bookings = Booking.objects.all()
+    #    serializer = BookingSerializer(bookings, many=True)
+    #    return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
         serializer = BookingSerializer(data=request.data)
@@ -98,6 +171,7 @@ class BookingView(APIView):
             return Response({'status': 'successfully booked a table',
                              'data': serializer.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
+
 
 
 class SingleBookingView(APIView):
@@ -136,10 +210,10 @@ class SingleCategoryView(APIView):
 class MenuItemView(APIView):
     #permission_classes = [IsAuthenticated]
     
-    def get(self, request):
-        items = MenuItem.objects.all()
-        serializer = MenuItemSerializer(items, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+    #def get(self, request):
+    #    items = MenuItem.objects.all()
+    #    serializer = MenuItemSerializer(items, many=True)
+    #    return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
         serialzer = MenuItemCreateSerializer(data=request.data)

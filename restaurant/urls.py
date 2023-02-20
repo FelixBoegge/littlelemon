@@ -1,13 +1,20 @@
 from django.urls import path
 from . import views
-
+ 
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('manager/', views.ManagerView.as_view()),
-    path('delivery/', views.DeliveryView.as_view()),
-    path('booking/', views.BookingView.as_view()),
-    path('booking/<int:pk>', views.SingleBookingView.as_view()),
+    path('', views.HomeView.as_view(), name='home'),
+    path('about/', views.AboutView.as_view(), name="about"),
+    path('reservations/', views.ReservationsView.as_view(), name="reservations"),
+    path('book/', views.BookView.as_view(), name="book"),
+    path('menu/', views.MenuView.as_view(), name="menu"),
+    path('menu/<int:pk>/', views.SingleMenuView.as_view(), name="menu_item"),
+    path('bookings/', views.BookingsView.as_view(), name='bookings'),
+    
+    path('manager/', views.ManagerView.as_view(), name='manager'),
+    path('delivery/', views.DeliveryView.as_view(), name='delivery'),
+    path('booking/', views.BookingView.as_view(), name='booking'),
+    path('booking/<int:pk>', views.SingleBookingView.as_view(), name='single_booking'),
     path('menu/', views.MenuItemView.as_view()),
     path('menu/<int:pk>', views.SingleMenuItemView.as_view()),
     path('category/', views.CategoryView.as_view()),
