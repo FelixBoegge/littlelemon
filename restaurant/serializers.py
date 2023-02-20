@@ -39,7 +39,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
 class MenuItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
-        fields = ['id', 'title','category', 'price', 'inventory', 'featured']
+        fields = '__all__'
         
 
 class CartSerializer(serializers.ModelSerializer):
@@ -53,4 +53,32 @@ class CartCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'menuitem', 'quantity', 'unit_price', 'price']
+        fields = '__all__'
+        
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    menuitem = serializers.CharField(source='menuitem.title', read_only=True)
+    class Meta:
+        model = OrderItem
+        fields = ['menuitem', 'quantity', 'unit_price', 'price']
+        
+
+class OrderItemCreateSerialzer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = '__all__'
+        
+
+class OrderSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    order_items = OrderItemSerializer(source='orderitem_set', many=True, read_only=True)
+    delivery_crew = serializers.CharField(source='delivery_crew.username', read_only=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'order_items','total', 'delivery_crew', 'status', 'date']
+        
+        
+class OrderCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.models import User, Group
+from django.db.models import Sum
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -8,8 +9,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 
 from .models import Booking, Category, MenuItem, Cart, Order, OrderItem 
-from .serializers import UserSerializer, BookingSerializer, CategorySerializer, MenuItemSerializer, MenuItemCreateSerializer, CartSerializer, CartCreateSerializer
+from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
+                          MenuItemSerializer, MenuItemCreateSerializer,
+                          CartSerializer, CartCreateSerializer,
+                          OrderItemSerializer, OrderItemCreateSerialzer,
+                          OrderSerializer, OrderCreateSerializer)
 
+import datetime
 
 class ManagerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -20,10 +26,10 @@ class ManagerView(APIView):
         return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
-        queryset = User.objects.filter(username=request.data['username'])
-        if not queryset.exists():
+        user = User.objects.get(username=request.data['username'])
+        if not user:
             return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        new_manager = queryset[0]                       # since usernames are unique 
+        new_manager = user
         managers = Group.objects.get(name='Manager')
         if new_manager.groups.filter(name='Manager').exists():
            return Response({'status': f"'{new_manager.username}' is already in manager group"}, status.HTTP_200_OK)
@@ -31,10 +37,10 @@ class ManagerView(APIView):
         return Response({'status': f"'{new_manager.username}' was added to manager group"}, status.HTTP_200_OK)
     
     def delete(self, request):
-        queryset = User.objects.filter(username=request.data['username'])
-        if not queryset.exists():
+        user = User.objects.get(username=request.data['username'])
+        if not user:
             return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        old_manager = queryset[0]
+        old_manager = user
         managers = Group.objects.get(name='Manager')
         if not old_manager.groups.filter(name='Manager').exists():
            return Response({'status': f"'{old_manager.username}' is not in manager group"}, status.HTTP_200_OK)
@@ -51,10 +57,10 @@ class DeliveryView(APIView):
         return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
-        queryset = User.objects.filter(username=request.data['username'])
-        if not queryset.exists():
+        user = User.objects.get(username=request.data['username'])
+        if not user:
             return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        new_delivery_guy = queryset[0] 
+        new_delivery_guy = user
         delivery_guys = Group.objects.get(name='Delivery')
         if new_delivery_guy.groups.filter(name='Delivery').exists():
            return Response({'status': f"'{new_delivery_guy.username}' is already in delivery group"}, status.HTTP_200_OK)
@@ -62,10 +68,10 @@ class DeliveryView(APIView):
         return Response({'status': f"'{new_delivery_guy.username}' was added to delivery group"}, status.HTTP_200_OK)
     
     def delete(self, request):
-        queryset = User.objects.filter(username=request.data['username'])
-        if not queryset.exists():
+        user = User.objects.get(username=request.data['username'])
+        if not user:
             return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        old_delivery_guy = queryset[0]
+        old_delivery_guy = user
         delivery_guys = Group.objects.get(name='Delivery')
         if not old_delivery_guy.groups.filter(name='Delivery').exists():
            return Response({'status': f"'{old_delivery_guy.username}' is not in delivery group"}, status.HTTP_200_OK)
@@ -176,8 +182,8 @@ class SingleMenuItemView(APIView):
     
     
 class CartView(APIView):
-    permission_classes = [IsAuthenticated
-                          ]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         user_id = Token.objects.get(key=request.auth.key).user_id
         carts = Cart.objects.filter(user=user_id)
@@ -186,9 +192,9 @@ class CartView(APIView):
         
     def post(self, request):
         user_id = Token.objects.get(key=request.auth.key).user_id
-        menuitem_id = request.data['menuitem']
+        menuitem_id = MenuItem.objects.get(title=request.data['menuitem']).pk
         quantity = int(request.data['quantity'])
-        unit_price = float(MenuItem.objects.filter(pk=menuitem_id).values('price')[0]['price'])
+        unit_price = MenuItem.objects.get(pk=menuitem_id).price
         price = quantity * unit_price
         cart_item = {
             'user': user_id,
@@ -214,3 +220,60 @@ class CartView(APIView):
         return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
 
 
+class OrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        if request.user.groups.filter(name='Manager').exists():
+            orders = Order.objects.all()
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status.HTTP_200_OK)
+        
+        elif request.user.groups.filter(name='Delivery').exists():
+            orders = Order.objects.filter(delivery_crew=user_id)
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status.HTTP_200_OK)
+        
+        else:
+            orders = Order.objects.filter(user=user_id)
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status.HTTP_200_OK)
+
+    
+    def post(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        
+        if Cart.objects.filter(user=user_id).count() < 1:
+            return Response({'status': 'no items in cart'}, status.HTTP_200_OK)
+        orderitems_info = Cart.objects.filter(user=user_id).values('menuitem', 'quantity', 'unit_price', 'price')
+        order = {'user': user_id,
+                 'total': orderitems_info.aggregate(total=Sum('price'))['total'],
+                 'date': datetime.date.today()}
+        serializer_order = OrderCreateSerializer(data=order)
+        if serializer_order.is_valid():
+            serializer_order.save()
+            for orderitem_info in orderitems_info:
+                orderitem = {'order': serializer_order.data['id'],
+                             'menuitem': orderitem_info['menuitem'],
+                             'quantity': orderitem_info['quantity'],
+                             'unit_price': orderitem_info['unit_price'],
+                             'price': orderitem_info['price']}
+                serializer_orderitem = OrderItemCreateSerialzer(data=orderitem)
+                if serializer_orderitem.is_valid():
+                    serializer_orderitem.save()
+            Cart.objects.filter(user=user_id).delete()
+            return Response({'status': 'successfully created order from cartitems',
+                             'data': serializer_order.data}, status.HTTP_201_CREATED)
+        return Response({'status': 'unable to create order from cartitems'}, status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        orders = Order.objects.filter(user=user_id)
+        num_orders= len(orders)
+        if num_orders == 0:
+            return Response({'status': 'no orders'}, status.HTTP_200_OK)
+        orders.delete()
+        return Response({'status': f'successfully delete {num_orders} orders'}, status.HTTP_200_OK)
+
+        
