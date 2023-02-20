@@ -277,3 +277,60 @@ class OrderView(APIView):
         return Response({'status': f'successfully delete {num_orders} orders'}, status.HTTP_200_OK)
 
         
+class SingleOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        if request.user != order.user and not request.user.groups.filter(name='Manager').exists():
+            return Response({'status': 'not your order or no manager privileges'}, status.HTTP_403_FORBIDDEN)
+        serializer = OrderSerializer(order)
+        return Response(serializer.data, status.HTTP_200_OK)
+    
+    def patch(self, request, pk):   
+        if request.user.groups.filter(name='Manager').exists():
+            for k in request.data.keys():
+                if k not in ['delivery_crew', 'status']:
+                    return Response({'status': 'manager can only assign delivery-crew or change status'}, status.HTTP_403_FORBIDDEN)
+                delivery_crew = User.objects.get(pk=request.data.get('delivery_crew'))
+                if not delivery_crew:
+                    return Response({'status': 'user does not exist'}, status.HTTP_400_BAD_REQUEST)
+                if k == 'delivery_crew' and not delivery_crew.groups.filter(name='Delivery').exists():
+                    return Response({'status': 'selected user is not in delivery-crew'}, status.HTTP_403_FORBIDDEN)
+                if delivery_crew == Order.objects.get(pk=pk).delivery_crew:
+                    return Response({'status': 'selected user is already delivery-crew'}, status.HTTP_200_OK)
+                if k == 'status' and not request.data.get('status') in ['0', '1']:
+                    return Response({'status': 'status can only be set to 0 (not delivered) and 1 (delivered)'}, status.HTTP_403_FORBIDDEN)    
+            order = get_object_or_404(Order, pk=pk)
+            serializer = OrderSerializer(order, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status': 'successfully modified order',
+                                 'data': serializer.data}, status.HTTP_200_OK)
+            return Response({'status': 'order modification failed'}, status.HTTP_400_BAD_REQUEST)
+            
+        if request.user.groups.filter(name='Delivery').exists():
+            for k in request.data.keys():
+                if k != 'status':
+                    return Response({'status': 'delivery-crew can only change the status'}, status.HTTP_403_FORBIDDEN)
+                if request.data.get('status') not in ['0', '1']:
+                    return Response({'status': 'status can only be set to 0 (not delivered) and 1 (delivered)'}, status.HTTP_403_FORBIDDEN)         
+            order = get_object_or_404(Order, pk=pk)
+            serializer = OrderSerializer(order, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status': 'successfully changed status of order',
+                                 'data': serializer.data}, status.HTTP_200_OK)
+            return Response({'status': 'order modification failed'}, status.HTTP_400_BAD_REQUEST)
+        
+        else:
+            return Response({'status': 'only managers and delivery_crew can modify orders'}, status.HTTP_403_FORBIDDEN)
+         
+    
+    def delete(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        if request.user != order.user and not request.user.groups.filter(name='Manager').exists():
+            return Response({'status': 'not your order or no manager privileges'}, status.HTTP_403_FORBIDDEN)
+        order.delete()
+        return Response({'status': 'successfully delete order'}, status.HTTP_200_OK)
+        
