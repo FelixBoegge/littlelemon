@@ -148,13 +148,20 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    
+   # 'DEFAULT_PERMISSION_CLASSES': (
+   #     'rest_framework.permissions.IsAuthenticated',  
+   # ),
 }
+
+AUTH_USER_MODEL = 'restaurant.User'
 
 DJOSER = {
     'USER_ID_FIELD': 'username',
     
     'SERIALIZERS': {
         'user': 'restaurant.serializers.UserSerializer',
+        'current_user': 'restaurant.serializers.UserSerializer',
         'user_create': 'restaurant.serializers.UserRegistrationSerializer',
     },
 }

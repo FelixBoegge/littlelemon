@@ -1,6 +1,13 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
+
+class User(AbstractUser):
+    username = models.CharField(max_length=100, blank=False, unique=True)
+    first_name = models.CharField(max_length=100, blank=False)
+    last_name = models.CharField(max_length=100, blank=False)
+    email = models.CharField(max_length=100, blank=False, unique=True)
+    password = models.CharField(max_length=255, blank=False)
 
 class Booking(models.Model):
     name = models.CharField(max_length=255, db_index=True)

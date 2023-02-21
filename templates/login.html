@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section>
+  <article>
+    <h1>Sign Up</h1>
+    <!--Begin row-->
+    <div class="row">
+      <!--Begin col-->
+      <div class="column">
+          <form method="POST" id="form">
+            {% csrf_token %}
+            <p>
+              <label for="username">Username:</label>
+              <input type="text" placeholder="Username" maxlength="100" required="true" id="username">
+            </p>
+            <p>
+              <label for="password">Password:</label>
+              <input type="password" placeholder="Your Password" maxlength="255" required="true" id="password">
+            </p>
+            <button type="button" id="button" input type="reset">Login</button>
+          </form>
+      </div>
+    </div>
+  </article>
+</section>
+
+<script>
+
+    document.getElementById('button').addEventListener('click', function (e) {
+    const data = {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value,
+    }
+    document.getElementById("form").reset();
+    fetch("{% url 'userlogin' %}", { method: 'post', body: JSON.stringify(data) })
+    //fetch("{% url 'bookings' %}", { mehtod: 'post', body: formdata})
+      .then(r => r.text())
+      .then(data => {
+      })
+  })
+
+</script>
+{% endblock %}

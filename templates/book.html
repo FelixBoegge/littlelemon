@@ -11,21 +11,18 @@
       <div class="column">
           {% csrf_token %}
           <form method="POST" id="form">
-            <!--{% csrf_token %}-->
             <p>
               <label for="name">Name:</label>
               <input type="text" placeholder="Your Name" maxlength="200" required="true" id="name">
             </p>
             <p>
-            <p>
               <label for="num_guests">Guests:</label>
               <input type="text" placeholder="Number of Guests" maxlength="2" required="true" id="num_guests">
             </p>
-              <!-- Step 9: Part one -->
+            <p>
               <label for="booking_date">Date:</label>
               <input type="date" placeholder="Booking Date" id="booking_date">
             </p>
-      
             <p>
               <label for="booking_slot">Booking time:</label>
               <select id="booking_slot">
@@ -36,7 +33,6 @@
           </form>
       </div>
       <!--End col-->
-
       <!--Begin col-->
       <div class="column">
         <h2>Bookings For <span id="today"></span></h2>
@@ -46,21 +42,13 @@
       <!--End col-->
     </div>
     <!--End row-->
-
-
-
-
   </article>
 </section>
 <script>
 
   const date = new Date()
   document.getElementById('booking_date').value = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,"0")}-${date.getDate().toString().padStart(2, "0")}`
-
-  console.log(document.getElementById('booking_date').value)
   getBookings()
-
-  /*  Step 10: Part two */
   document.getElementById('booking_date').addEventListener('change', (event) => {getBookings()})
 
   function getBookings() {
@@ -68,25 +56,17 @@
     const date = document.getElementById('booking_date').value
     document.getElementById('today').innerHTML = date
 
-    
     fetch("{% url 'bookings' %}" + '?date=' + date)
       .then(r => r.json())
       .then(data => {
         reserved_slots = []
         bookings = ''
 
-        /* Step 11: Part three */
-        //for (i=0; i<data.length; i++) {
-        //  reserved_slots.push(data[i].fields.booking_slot)
-        //  bookings += `<p>${data[i].fields.name} - ${formatTime(data[i].fields.booking_slot)}</p>`
-        //}
-
         for (item of data) {
           reserved_slots.push(item.fields.booking_slot)
           bookings += `<p>${item.fields.name} - ${formatTime(item.fields.booking_slot)}</p>`
         }
 
-        /* Step 12: Part four  */
         slot_options = '<option value="0" disabled>Select time</option>'        
         for (i=10; i<=22; i++) {
           const label = formatTime(i)
@@ -113,7 +93,6 @@
     return label
   }
 
-
   document.getElementById('button').addEventListener('click', function (e) {
     const formdata = {
       name: document.getElementById('name').value,
@@ -123,6 +102,7 @@
     }
 
     fetch("{% url 'bookings' %}", { method: 'post', body: JSON.stringify(formdata) })
+    //fetch("{% url 'bookings' %}", { mehtod: 'post', body: formdata})
       .then(r => r.text())
       .then(data => {
         getBookings()
@@ -130,4 +110,3 @@
   })
 </script>
 {% endblock %}
-

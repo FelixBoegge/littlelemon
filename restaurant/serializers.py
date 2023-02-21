@@ -1,12 +1,13 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from djoser.serializers import UserSerializer, UserCreateSerializer
-from .models import Booking, Category, MenuItem, Cart, Order, OrderItem
+from .models import User, Booking, Category, MenuItem, Cart, Order, OrderItem
 
 
 class UserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password']
 
 class UserRegistrationSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
@@ -14,10 +15,10 @@ class UserRegistrationSerializer(UserCreateSerializer):
         
         
 class BookingSerializer(serializers.ModelSerializer):
-    #user = UserSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
     class Meta:
         model = Booking
-        fields = ['id', 'name', 'num_guests', 'booking_date', 'booking_slot']
+        fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_slot']
         extra_kwargs = {
             'booking_slot': {'min_value': 10, 'max_value': 22}
         }       

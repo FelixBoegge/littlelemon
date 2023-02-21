@@ -2,12 +2,14 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.core import serializers
 from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
+from django.views.generic.edit import FormView
+
 
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -18,7 +20,7 @@ from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
                           CartSerializer, CartCreateSerializer,
                           OrderItemCreateSerialzer,
                           OrderSerializer, OrderCreateSerializer)
-from .forms import BookingForm
+from .forms import BookingForm, SignupForm, LoginForm
 
 from datetime import datetime
 import json
@@ -130,21 +132,24 @@ class SingleMenuView(APIView):
 class BookingsView(APIView):
     @csrf_exempt
     def post(self, request):
+        print('########', 'hello')
         data = json.load(request)
+        #print('#######', data['name'], type(data['name']))
         exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
-            booking_slot=request.data['booking_slot']).exists()
+            booking_slot=data['booking_slot']).exists()
         if exist==False:
             booking = Booking(
                 name=data['name'],
-                user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
+                #user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
+                user = 'felix',
                 num_guests=data['num_guests'],
                 booking_date=data['booking_date'],
                 booking_slot=data['booking_slot'],
             )
             print('#######', booking, type(booking))
-            serializer = BookingSerializer(data=booking)
-            if serializer.is_valid():
-                booking.save()
+            #serializer = BookingSerializer(data=booking)
+            #if serializer.is_valid():
+            booking.save()
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
     
@@ -155,6 +160,58 @@ class BookingsView(APIView):
         serialized_bookings = serializers.serialize('json', bookings)
         return HttpResponse(serialized_bookings, content_type='application/json')
 
+class SignupView(FormView):
+    template_name = 'signup.html'
+    form_class = SignupForm
+    
+    def form_valid(self, form):
+        return super().form_valid(form)
+    
+    #def get(self, request):
+    #    return render(request, 'signup.html')
+    
+    #def post(self, request):
+    #    form = SignupForm(request.POST)
+    #    if form.is_valid():
+    #        form.save()
+    #    context = {'form':form}
+    #    return render(request, 'signup.html', context)
+
+class LoginView(FormView):
+    template_name = 'login.html'
+    form_class = LoginForm
+    
+    def form_valid(self, form):
+        return super().form_valid(form)
+    
+class UsersView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        new_user_data = json.load(request)
+        exist = get_user_model().objects.filter(username=new_user_data['username']).exists()
+        if exist==False:
+            new_user = get_user_model()(
+                username = new_user_data['username'],
+                first_name = new_user_data['first_name'],
+                last_name = new_user_data['last_name'],
+                email = new_user_data['email'],
+                password = new_user_data['password'],
+            )
+            #serializer = UserCreateSerializer(data=new_user)
+            #if serializer.is_valid():
+            new_user.save()
+            return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+
+class UserLoginView(APIView):
+    def post(self, request):
+        login_data = json.load(request)
+        exist = get_user_model().objects.filter(username=login_data['username']).exists()
+        if exist:
+            pw = get_user_model().objects.get(login_data['username']).values('password')
+            if pw == login_data['password']:
+                return Response()
 
 class BookingView(APIView):
     permission_classes = [IsAuthenticated]
