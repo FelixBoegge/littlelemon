@@ -13,15 +13,17 @@ urlpatterns = [
     
     path('registration/', views.SignupView.as_view(), name='registration'),
     path('users/', views.UsersView.as_view(), name='users'),
-    path('login/', views.LoginView.as_view(), name='wow'),
-    path('userlogin/', views.UserLoginView.as_view(), name='userlogin'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    #path('userlogin/', views.UserLoginView.as_view(), name='userlogin'),
+    
+    path('menu/<slug:category>', views.MenuItemView.as_view(), name='menuitems'),
      
     path('manager/', views.ManagerView.as_view(), name='manager'),
     path('delivery/', views.DeliveryView.as_view(), name='delivery'),
     path('booking/', views.BookingView.as_view(), name='booking'),
     path('booking/<int:pk>', views.SingleBookingView.as_view(), name='single_booking'),
-    path('menu/', views.MenuItemView.as_view()),
-    path('menu/<int:pk>', views.SingleMenuItemView.as_view()),
+    path('menuitem/', views.MenuItemsView.as_view()),
+    path('menuitem/<int:pk>', views.SingleMenuItemView.as_view()),
     path('category/', views.CategoryView.as_view()),
     path('category/<int:pk>', views.SingleCategoryView.as_view()),
     path('cart/', views.CartView.as_view()),

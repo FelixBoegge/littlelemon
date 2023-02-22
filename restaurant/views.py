@@ -56,7 +56,6 @@ class ManagerView(APIView):
         managers.user_set.remove(old_manager)
         return Response({'status': f"'{old_manager.username}' was removed to manager group"}, status.HTTP_200_OK)
 
-
 class DeliveryView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -118,8 +117,19 @@ class BookView(APIView):
 
 class MenuView(APIView):
     def get(self, request):
-        menus = MenuItem.objects.all()
-        return render(request, 'menu.html', {'menu': menus})
+        categories = Category.objects.all()
+        return render(request, 'menu.html', {'menu': categories})
+    
+class MenuItemView(APIView):
+    def get(self, request, category):
+        items = MenuItem.objects.all()
+        if category:
+            items = items.filter(category__slug=category)
+        category_name = Category.objects.get(slug=category).title
+        print('############', category_name, type(category_name))
+        context = {'menuitems': items,
+                   'category': category_name}
+        return render(request, 'category.html', context)
 
 class SingleMenuView(APIView):
     def get(self, request, pk):
@@ -204,14 +214,14 @@ class UsersView(APIView):
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
 
-class UserLoginView(APIView):
-    def post(self, request):
-        login_data = json.load(request)
-        exist = get_user_model().objects.filter(username=login_data['username']).exists()
-        if exist:
-            pw = get_user_model().objects.get(login_data['username']).values('password')
-            if pw == login_data['password']:
-                return Response()
+#class UserLoginView(APIView):
+#    def post(self, request):
+#        login_data = json.load(request)
+#        exist = get_user_model().objects.filter(username=login_data['username']).exists()
+#        if exist:
+#            pw = get_user_model().objects.get(login_data['username']).values('password')
+#            if pw == login_data['password']:
+#                return Response()
 
 class BookingView(APIView):
     permission_classes = [IsAuthenticated]
@@ -264,13 +274,13 @@ class SingleCategoryView(APIView):
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
 
 
-class MenuItemView(APIView):
+class MenuItemsView(APIView):
     #permission_classes = [IsAuthenticated]
     
-    #def get(self, request):
-    #    items = MenuItem.objects.all()
-    #    serializer = MenuItemSerializer(items, many=True)
-    #    return Response(serializer.data, status.HTTP_200_OK)
+    def get(self, request):
+        items = MenuItem.objects.all()
+        serializer = MenuItemSerializer(items, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
         serialzer = MenuItemCreateSerializer(data=request.data)

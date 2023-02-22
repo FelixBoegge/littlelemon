@@ -1,19 +1,28 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<h1>Menu</h1>
-<!--Begin col-->
-<div class="column">
-    {% for item in menu %}
-    <p>
-        <a href="{% url 'menu_item' pk=item.pk %}">
-            {{ item.title }}
-            </a>
-        <span class="menu-price">
-            ${{ item.price }}
-        </span>
-    </p>
-    {% endfor %}
-</div>
-<!--End col-->
+
+<section>
+    <article>
+        <h1>Categories</h1>
+        <span>
+            <a href="{% url 'home' %}">Home</a> /
+         </span>
+         <div class="row">
+            {% for category in menu %}
+            <div class="column">
+                <p>
+                    <div id="category_img_container">
+                        <h2 id="category_title">{{ category.title }}</h2>
+                        <a href="{% url 'menuitems' category=category.slug  %}">
+                            <img src="/../static/img/categories/{{category.slug}}.jpg" alt="{{ category.title }}" id="category_img"/>
+                        </a>
+                    </div>
+                </p>
+            </div>
+            {% endfor %}
+         </div>
+    </article>
+</section>
+
 {% endblock %}
