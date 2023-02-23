@@ -3,13 +3,19 @@
   <img src="{% static 'img/logo.png' %}" />
 </header>
 <nav>
-  <ul>
+  <ul class="main-nav">
     <li><a href="{% url 'home' %}">Home</a></li>
     <li><a href="{% url 'about' %}">About</a></li>
     <li><a href="{% url 'menu' %}">Menu</a></li>
     <li><a href="{% url 'book' %}">Book</a></li>
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
-    <li><a href="{% url 'signupform' %}">Sign Up</a></li>
+
+    {% if user.is_authenticated %}
+    <li class="push"><a href='/auth/users/me/'>{{user.first_name}} {{user.last_name}}</a></li>
+    <li><a href='/auth/token/logout/'>Logout</a></li>
+    {% else %}
+    <li class="push"><a href="{% url 'signupform' %}">Sign Up</a></li>
     <li><a href="{% url 'loginform' %}">Login</a></li>
+    {% endif %}
   </ul>
 </nav>

@@ -146,22 +146,23 @@ REST_FRAMEWORK = {
     
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
     ),
     
-   # 'DEFAULT_PERMISSION_CLASSES': (
-   #     'rest_framework.permissions.IsAuthenticated',  
-   # ),
+    #'DEFAULT_PERMISSION_CLASSES': (
+    #    'rest_framework.permissions.IsAuthenticated',  
+    #),
 }
 
-AUTH_USER_MODEL = 'restaurant.User'
+AUTH_USER_MODEL = 'restaurant.CustomUser'
 
 DJOSER = {
     'USER_ID_FIELD': 'username',
-    
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    #'ACTIVATION_URL': '/activate/{uid}/{token}',
     'SERIALIZERS': {
-        'user': 'restaurant.serializers.UserSerializer',
+        'user': 'restaurant.serializers.UserCreateSerializer',
         'current_user': 'restaurant.serializers.UserSerializer',
-        'user_create': 'restaurant.serializers.UserRegistrationSerializer',
+        'user_create': 'restaurant.serializers.UserCreateSerializer',
     },
 }

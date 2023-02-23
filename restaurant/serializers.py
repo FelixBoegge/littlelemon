@@ -1,21 +1,21 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
 from djoser.serializers import UserSerializer, UserCreateSerializer
-from .models import User, Booking, Category, MenuItem, Cart, Order, OrderItem
+from .models import CustomUser, Booking, Category, MenuItem, Cart, Order, OrderItem
 
 
-class UserSerializer(UserSerializer):
+class CustomUserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        model = User
+        model = CustomUser
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password']
 
-class UserRegistrationSerializer(UserCreateSerializer):
+class UserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
+        model = CustomUser
         fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password']
         
         
 class BookingSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = CustomUserSerializer(read_only=True)
     class Meta:
         model = Booking
         fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_slot']
@@ -45,7 +45,7 @@ class MenuItemCreateSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     menuitem = serializers.CharField(source='menuitem.title', read_only=True)
-    user = UserSerializer(read_only=True)
+    user = CustomUserSerializer(read_only=True)
     class Meta:
         model = Cart
         fields = ['id', 'user', 'menuitem', 'quantity', 'unit_price', 'price']
@@ -71,7 +71,7 @@ class OrderItemCreateSerialzer(serializers.ModelSerializer):
         
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = CustomUserSerializer(read_only=True)
     order_items = OrderItemSerializer(source='orderitem_set', many=True, read_only=True)
     delivery_crew_name = serializers.CharField(source='delivery_crew.username', read_only=True)
     class Meta:

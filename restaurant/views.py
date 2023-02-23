@@ -7,11 +7,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
 from django.views.generic.edit import FormView
 
+from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 
 from .models import Booking, Category, MenuItem, Cart, Order 
@@ -25,6 +27,147 @@ from .forms import BookingForm, SignupForm, LoginForm
 from datetime import datetime
 import json
 
+
+class HomeView(APIView):
+    def get(self, request):
+        return render(request, 'index.html')
+
+class AboutView(APIView):
+    def get(self, request):
+        return render(request, 'about.html')
+
+class MenuView(APIView):
+    #authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        categories = Category.objects.all()
+        context = {'menu': categories}
+        token = Token.objects.get(user=2).key
+        context['Authorization'] = 'Token ' + str(token)
+        print('############', context['Authorization'], type(context['Authorization']))
+
+        
+        if request.user.is_authenticated:
+            print('##########', 'YES')
+            token = Token.objects.get(user=request.user.id).key
+            context['Authorization'] = 'Token ' + token
+        else:
+            print('################', 'anonymous user', request.user)
+        
+        
+        return render(request, 'menu.html', context) 
+    
+class CategoryView(APIView):
+    def get(self, request, category):
+        items = MenuItem.objects.all()
+        if category:
+            items = items.filter(category__slug=category)
+        category_name = Category.objects.get(slug=category).title
+        context = {'menuitems': items,
+                   'category': category_name}
+        return render(request, 'category.html', context)
+
+class SingleMenuItemView(APIView):
+    def get(self, request, pk):
+        if pk: 
+            menu_item = MenuItem.objects.get(pk=pk) 
+        else: 
+            menu_item = "" 
+        return render(request, 'menu_item.html', {"menu_item": menu_item}) 
+
+class BookView(APIView):
+    form = BookingForm()
+    
+    def get(self, request):
+        return render(request, 'book.html')
+    
+    def post(self, request):
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            form.save()
+        context = {'form':form}
+        return render(request, 'book.html', context)
+
+class BookingsView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        print('########', 'hello')
+        data = json.load(request)
+        exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
+            booking_slot=data['booking_slot']).exists()
+        if exist==False:
+            booking = Booking(
+                name=data['name'],
+                #user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
+                user = 'felix',
+                num_guests=data['num_guests'],
+                booking_date=data['booking_date'],
+                booking_slot=data['booking_slot'],
+            )
+            print('#######', booking, type(booking))
+            #serializer = BookingSerializer(data=booking)
+            #if serializer.is_valid():
+            booking.save()
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+    
+    def get(self, request):
+        date = request.GET.get('date',datetime.today().date())
+        bookings = Booking.objects.all().filter(booking_date=date)
+        serialized_bookings = serializers.serialize('json', bookings)
+        return HttpResponse(serialized_bookings, content_type='application/json')
+
+class ReservationsView(APIView):
+    #permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        date = request.GET.get('date',datetime.today().date())
+        bookings = Booking.objects.all()
+        return render(request, 'bookings.html', {'bookings': bookings})
+
+class SignupFormView(FormView):
+    template_name = 'signup.html'
+    form_class = SignupForm
+    success_url = '/user-created/'
+    def form_valid(self, form):
+        return super().form_valid(form)
+    
+class UserCreateSuccessView(APIView):
+    def get(self, request):
+        success_messege = "<html><body><h1>Successfully created new User!</h1></body></html>"
+        return HttpResponse(success_messege)
+
+class LoginFormView(FormView):
+    template_name = 'login.html'
+    form_class = LoginForm
+    def form_valid(self, form):
+        return super().form_valid(form)
+
+class DjoserLogin(TokenCreateView):
+    def login(self, request):
+        pass
+
+
+class UsersView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        new_user_data = json.load(request)
+        exist = get_user_model().objects.filter(username=new_user_data['username']).exists()
+        if exist==False:
+            new_user = get_user_model()(
+                username = new_user_data['username'],
+                first_name = new_user_data['first_name'],
+                last_name = new_user_data['last_name'],
+                email = new_user_data['email'],
+                password = new_user_data['password'],
+            )
+            #serializer = UserCreateSerializer(data=new_user)
+            #if serializer.is_valid():
+            new_user.save()
+            return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
 
 class ManagerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -86,170 +229,6 @@ class DeliveryView(APIView):
         delivery_guys.user_set.remove(old_delivery_guy)
         return Response({'status': f"'{old_delivery_guy.username}' was removed to delivery group"}, status.HTTP_200_OK)
 
-class HomeView(APIView):
-    def get(self, request):
-        return render(request, 'index.html')
-
-class AboutView(APIView):
-    def get(self, request):
-        return render(request, 'about.html')
-
-class ReservationsView(APIView):
-    #permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        date = request.GET.get('date',datetime.today().date())
-        bookings = Booking.objects.all()
-        return render(request, 'bookings.html', {'bookings': bookings})
-
-class BookView(APIView):
-    form = BookingForm()
-    
-    def get(self, request):
-        return render(request, 'book.html')
-    
-    def post(self, request):
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            form.save()
-        context = {'form':form}
-        return render(request, 'book.html', context)
-
-class MenuView(APIView):
-    def get(self, request):
-        categories = Category.objects.all()
-        return render(request, 'menu.html', {'menu': categories})
-    
-class MenuItemView(APIView):
-    def get(self, request, category):
-        items = MenuItem.objects.all()
-        if category:
-            items = items.filter(category__slug=category)
-        category_name = Category.objects.get(slug=category).title
-        context = {'menuitems': items,
-                   'category': category_name}
-        return render(request, 'category.html', context)
-
-class SingleMenuView(APIView):
-    def get(self, request, pk):
-        if pk: 
-            menu_item = MenuItem.objects.get(pk=pk) 
-        else: 
-            menu_item = "" 
-        return render(request, 'menu_item.html', {"menu_item": menu_item}) 
-
-class BookingsView(APIView):
-    @csrf_exempt
-    def post(self, request):
-        print('########', 'hello')
-        data = json.load(request)
-        #print('#######', data['name'], type(data['name']))
-        exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
-            booking_slot=data['booking_slot']).exists()
-        if exist==False:
-            booking = Booking(
-                name=data['name'],
-                #user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
-                user = 'felix',
-                num_guests=data['num_guests'],
-                booking_date=data['booking_date'],
-                booking_slot=data['booking_slot'],
-            )
-            print('#######', booking, type(booking))
-            #serializer = BookingSerializer(data=booking)
-            #if serializer.is_valid():
-            booking.save()
-        else:
-            return HttpResponse("{'error':1}", content_type='application/json')
-    
-    def get(self, request):
-        date = request.GET.get('date',datetime.today().date())
-        bookings = Booking.objects.all().filter(booking_date=date)
-        #serialized_bookings = BookingSerializer(bookings, many=True)
-        serialized_bookings = serializers.serialize('json', bookings)
-        return HttpResponse(serialized_bookings, content_type='application/json')
-
-class SignupFormView(FormView):
-    template_name = 'signup.html'
-    form_class = SignupForm
-    def form_valid(self, form):
-        return super().form_valid(form)
-    
-
-class SignupView(APIView):
-    def post(self, request):
-        print('############', request.data)
-        username = request.POST['username']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        password1 = request.POST['password1']
-        password2 = request.POST['password2']
-        print('##############')
-        html1 = "<html><body>Confirm Password and Password should be same </body></html>"
-        html2 = "<html><body>User Already present </body></html>"
-        if password1 != password2:
-            return HttpResponse(html1)
-        for user in get_user_model().objects.all():
-            if (user.username == username) or (user.email == email):
-                return HttpResponse(html2)
-        user = get_user_model()(username=username,
-                                first_name=first_name,
-                                last_name=last_name,
-                                email=email,
-                                password=password1)
-        user.save()
-        return redirect('login')
-
-
-class LoginFormView(FormView):
-    template_name = 'login.html'
-    form_class = LoginForm
-    def form_valid(self, form):
-        return super().form_valid(form)
-    
-#class LoginView(APIView):
-#    def post(self, request):
-#        print('###########', request, request['username'])
-#        username = request.POST['username']
-#        password = request.POST['password']
-#        user = authenticate(username=username, password=password)
-#        html = "<html><body>No User found</body></html>"
-#        if user is not None:
-#            login(request, user)
-#            return redirect('')
-#        else:
-#            return HttpResponse(html)
-    
-class UsersView(APIView):
-    @csrf_exempt
-    def post(self, request):
-        new_user_data = json.load(request)
-        exist = get_user_model().objects.filter(username=new_user_data['username']).exists()
-        if exist==False:
-            new_user = get_user_model()(
-                username = new_user_data['username'],
-                first_name = new_user_data['first_name'],
-                last_name = new_user_data['last_name'],
-                email = new_user_data['email'],
-                password = new_user_data['password'],
-            )
-            #serializer = UserCreateSerializer(data=new_user)
-            #if serializer.is_valid():
-            new_user.save()
-            return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
-        else:
-            return HttpResponse("{'error':1}", content_type='application/json')
-
-#class UserLoginView(APIView):
-#    def post(self, request):
-#        login_data = json.load(request)
-#        exist = get_user_model().objects.filter(username=login_data['username']).exists()
-#        if exist:
-#            pw = get_user_model().objects.get(login_data['username']).values('password')
-#            if pw == login_data['password']:
-#                return Response()
-
 class BookingView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -265,7 +244,6 @@ class BookingView(APIView):
             return Response({'status': 'successfully booked a table',
                              'data': serializer.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
-
 
 class SingleBookingView(APIView):
     pass
@@ -286,7 +264,6 @@ class CategoryView(APIView):
                              'data': serializer.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
 
-
 class SingleCategoryView(APIView):
     permission_classes=[IsAuthenticated]
     
@@ -298,7 +275,6 @@ class SingleCategoryView(APIView):
     def delete(self, reqeuest, pk):
         get_object_or_404(Category, pk=pk).delete()
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
-
 
 class MenuItemsView(APIView):
     #permission_classes = [IsAuthenticated]
@@ -316,8 +292,7 @@ class MenuItemsView(APIView):
                              'data': serialzer.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
             
-
-class SingleMenuItemView(APIView):
+class SingleMenuView(APIView):
     #permission_classes = [IsAuthenticated]
     
     def get(self, request, pk):
@@ -346,7 +321,6 @@ class SingleMenuItemView(APIView):
     def delete(self, request, pk):
         get_object_or_404(MenuItem, pk=pk).delete()
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
-    
     
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
@@ -385,7 +359,6 @@ class CartView(APIView):
             return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
         carts.delete()
         return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
-
 
 class OrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -442,7 +415,6 @@ class OrderView(APIView):
             return Response({'status': 'no orders'}, status.HTTP_200_OK)
         orders.delete()
         return Response({'status': f'successfully delete {num_orders} orders'}, status.HTTP_200_OK)
-
         
 class SingleOrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -500,4 +472,3 @@ class SingleOrderView(APIView):
             return Response({'status': 'not your order or no manager privileges'}, status.HTTP_403_FORBIDDEN)
         order.delete()
         return Response({'status': 'successfully delete order'}, status.HTTP_200_OK)
-        

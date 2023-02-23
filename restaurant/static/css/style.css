@@ -61,6 +61,14 @@ nav ul {
     margin-bottom: 0px;
 }
 
+.main-nav {
+    display: flex;
+}
+
+.push {
+    margin-left: auto;
+}
+
 nav ul li {
     display: inline-block;
     margin: 0.5rem;
