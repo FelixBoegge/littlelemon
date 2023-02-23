@@ -32,6 +32,7 @@ class MenuItem(models.Model):
     title = models.CharField(max_length=255, db_index=True, unique=True)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, db_index=True)
+    description = models.CharField(max_length=1000, default='no description', null=True)
     inventory = models.SmallIntegerField()
     featured = models.BooleanField(db_index=True, default=False)
     

@@ -11,10 +11,10 @@ urlpatterns = [
     path('bookings/', views.BookingsView.as_view(), name='bookings'),
     path('reservations/', views.ReservationsView.as_view(), name='reservations'),
     
-    path('registration/', views.SignupView.as_view(), name='registration'),
-    path('users/', views.UsersView.as_view(), name='users'),
-    path('login/', views.LoginView.as_view(), name='login'),
-    #path('userlogin/', views.UserLoginView.as_view(), name='userlogin'),
+    path('signupform/', views.SignupFormView.as_view(), name='signupform'),
+    path('signup/', views.SignupView.as_view(), name='signup'),
+    path('loginform/', views.LoginFormView.as_view(), name='loginform'),
+    #path('login/', views.LoginView.as_view(), name='login'),
     
     path('menu/<slug:category>', views.MenuItemView.as_view(), name='menuitems'),
      

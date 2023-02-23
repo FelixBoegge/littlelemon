@@ -1,8 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.core import serializers
 from django.contrib.auth.models import User, Group
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, authenticate, logout
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
 from django.views.generic.edit import FormView
@@ -126,7 +126,6 @@ class MenuItemView(APIView):
         if category:
             items = items.filter(category__slug=category)
         category_name = Category.objects.get(slug=category).title
-        print('############', category_name, type(category_name))
         context = {'menuitems': items,
                    'category': category_name}
         return render(request, 'category.html', context)
@@ -170,29 +169,57 @@ class BookingsView(APIView):
         serialized_bookings = serializers.serialize('json', bookings)
         return HttpResponse(serialized_bookings, content_type='application/json')
 
-class SignupView(FormView):
+class SignupFormView(FormView):
     template_name = 'signup.html'
     form_class = SignupForm
-    
     def form_valid(self, form):
         return super().form_valid(form)
     
-    #def get(self, request):
-    #    return render(request, 'signup.html')
-    
-    #def post(self, request):
-    #    form = SignupForm(request.POST)
-    #    if form.is_valid():
-    #        form.save()
-    #    context = {'form':form}
-    #    return render(request, 'signup.html', context)
 
-class LoginView(FormView):
+class SignupView(APIView):
+    def post(self, request):
+        print('############', request.data)
+        username = request.POST['username']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        password1 = request.POST['password1']
+        password2 = request.POST['password2']
+        print('##############')
+        html1 = "<html><body>Confirm Password and Password should be same </body></html>"
+        html2 = "<html><body>User Already present </body></html>"
+        if password1 != password2:
+            return HttpResponse(html1)
+        for user in get_user_model().objects.all():
+            if (user.username == username) or (user.email == email):
+                return HttpResponse(html2)
+        user = get_user_model()(username=username,
+                                first_name=first_name,
+                                last_name=last_name,
+                                email=email,
+                                password=password1)
+        user.save()
+        return redirect('login')
+
+
+class LoginFormView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
-    
     def form_valid(self, form):
         return super().form_valid(form)
+    
+#class LoginView(APIView):
+#    def post(self, request):
+#        print('###########', request, request['username'])
+#        username = request.POST['username']
+#        password = request.POST['password']
+#        user = authenticate(username=username, password=password)
+#        html = "<html><body>No User found</body></html>"
+#        if user is not None:
+#            login(request, user)
+#            return redirect('')
+#        else:
+#            return HttpResponse(html)
     
 class UsersView(APIView):
     @csrf_exempt
@@ -238,7 +265,6 @@ class BookingView(APIView):
             return Response({'status': 'successfully booked a table',
                              'data': serializer.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
-
 
 
 class SingleBookingView(APIView):
