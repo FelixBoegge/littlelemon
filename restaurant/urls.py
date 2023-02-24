@@ -13,8 +13,13 @@ urlpatterns = [
     path('reservations/', views.ReservationsView.as_view(), name='reservations'),
     
     path('signupform/', views.SignupFormView.as_view(), name='signupform'),
+    path('profile/<str:username>', views.UserCreateView.as_view({'get': 'retrieve'}), name='profile'),
     path('user-created/', views.UserCreateSuccessView.as_view()),
+    
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
+    path('token/login/', views.LoginView.as_view(), name='token_create'),
+    
+    path('token/logout/', views.LogoutView.as_view(), name='token_destroy'),
          
     path('manager/', views.ManagerView.as_view(), name='manager'),
     path('delivery/', views.DeliveryView.as_view(), name='delivery'),

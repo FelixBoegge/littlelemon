@@ -1,0 +1,24 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block content %}
+
+<section>
+    <article>
+        <h1>{{ data.first_name }} {{ data.last_name }}</h1>
+        <!--Begin row-->
+        <div class="row">
+            <!--Begin col-->
+            <div class="column">
+                <h2>Username: {{ data.username }}</h2>
+                <p>User ID: {{ data.id }}</p>
+                <p>First Name: {{ data.first_name }}</p>
+                <p>Last Name: {{ data.last_name }}</p>
+                <p>Email Address: {{ data.email }}</p>
+            </div>
+            <!--End col-->
+        </div>
+        <!--End row-->
+    </article>
+</section>
+
+{% endblock %}

@@ -10,7 +10,7 @@
       <!--Begin col-->
       <div class="column">
           <form action="/auth/users/" method="post" id="form">
-            {% csrf_token %}
+          {% csrf_token %}
             <p>
               <label for="username">Username:</label>
               <input type="text" placeholder="Username" maxlength="100" required="true" id="username" name="username">

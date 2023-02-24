@@ -9,8 +9,8 @@
     <div class="row">
       <!--Begin col-->
       <div class="column">
-        <form action="/auth/token/login/" method="post" id="form">
-          {% csrf_token %}
+        <form action="{% url 'token_create' %}" method="post" id="form">
+        {% csrf_token %}
           <p>
             <label for="username">Username:</label>
             <input type="text" placeholder="Username" maxlength="100" required="true" id="username" name="username">

@@ -8,13 +8,16 @@ from django.db.models import Sum
 from django.views.generic.edit import FormView
 
 from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
+from djoser.utils import login_user, logout_user
+from djoser.conf import settings
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action
 
 from .models import Booking, Category, MenuItem, Cart, Order 
 from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
@@ -29,6 +32,7 @@ import json
 
 
 class HomeView(APIView):
+
     def get(self, request):
         return render(request, 'index.html')
 
@@ -37,21 +41,19 @@ class AboutView(APIView):
         return render(request, 'about.html')
 
 class MenuView(APIView):
-    #authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get(self, request):
+        if not request.user.is_authenticated:
+           return redirect('loginform') 
         categories = Category.objects.all()
         context = {'menu': categories}
-        token = Token.objects.get(user=2).key
-        context['Authorization'] = 'Token ' + str(token)
-        print('############', context['Authorization'], type(context['Authorization']))
-
         
         if request.user.is_authenticated:
-            print('##########', 'YES')
+            print('##############', 'YES')
             token = Token.objects.get(user=request.user.id).key
             context['Authorization'] = 'Token ' + token
+            print('##############', token)
         else:
             print('################', 'anonymous user', request.user)
         
@@ -144,9 +146,33 @@ class LoginFormView(FormView):
     def form_valid(self, form):
         return super().form_valid(form)
 
-class DjoserLogin(TokenCreateView):
-    def login(self, request):
-        pass
+class UserCreateView(UserViewSet):
+    @action(["get", "put", "patch", "delete"], detail=False)
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        if request.method == "GET":
+            context = {'data': self.retrieve(request, *args, **kwargs)}
+            return render(request, 'profile.html', context)
+        elif request.method == "PUT":
+            return self.update(request, *args, **kwargs)
+        elif request.method == "PATCH":
+            return self.partial_update(request, *args, **kwargs)
+        elif request.method == "DELETE":
+            return self.destroy(request, *args, **kwargs)
+
+
+class LoginView(TokenCreateView):
+    def _action(self, serializer):
+        token = login_user(self.request, serializer.user)
+        token_serializer_class = settings.SERIALIZERS.token
+        return redirect('home')
+        #return Response(
+        #    data=token_serializer_class(token).data, status=status.HTTP_200_OK)
+    
+class LogoutView(TokenDestroyView):
+    def post(self, request):
+        logout_user(request)
+        return redirect('home')
 
 
 class UsersView(APIView):

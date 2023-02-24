@@ -11,8 +11,10 @@
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
 
     {% if user.is_authenticated %}
-    <li class="push"><a href='/auth/users/me/'>{{user.first_name}} {{user.last_name}}</a></li>
-    <li><a href='/auth/token/logout/'>Logout</a></li>
+    <li class="push"><a href="{% url 'profile' username=user.username %}">{{user.first_name}} {{user.last_name}}</a></li>
+    <li><form action="{% url 'token_destroy' %}" method="post" id="form">
+      {% csrf_token %}
+      <input type="submit" id="button" value="Logout"></form></li>
     {% else %}
     <li class="push"><a href="{% url 'signupform' %}">Sign Up</a></li>
     <li><a href="{% url 'loginform' %}">Login</a></li>
