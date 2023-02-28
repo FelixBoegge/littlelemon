@@ -28,7 +28,7 @@ from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
 from .forms import BookingForm, SignupForm, LoginForm
 
 from datetime import datetime
-import json
+import json, requests
 
 
 class HomeView(APIView):
@@ -44,22 +44,23 @@ class MenuView(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get(self, request):
-        if not request.user.is_authenticated:
-           return redirect('loginform') 
-        categories = Category.objects.all()
-        context = {'menu': categories}
         
-        if request.user.is_authenticated:
+        #logged_in_users = get_user_model().objects.filter(id__in=Token.objects.all().values('user_id'))
+        #print('5###############', logged_in_users)
+        #if not request.user.is_authenticated:
+        if not request.user.id in Token.objects.all().values('user_id'):
+            print('################', 'anonymous user', request.user)
+            return redirect('loginform')
+        else:
             print('##############', 'YES')
             token = Token.objects.get(user=request.user.id).key
             context['Authorization'] = 'Token ' + token
             print('##############', token)
-        else:
-            print('################', 'anonymous user', request.user)
-        
-        
-        return render(request, 'menu.html', context) 
+            categories = Category.objects.all()
+            context = {'menu': categories}
+            return render(request, 'menu.html', context) 
     
+
 class CategoryView(APIView):
     def get(self, request, category):
         items = MenuItem.objects.all()
@@ -94,7 +95,6 @@ class BookView(APIView):
 class BookingsView(APIView):
     @csrf_exempt
     def post(self, request):
-        print('########', 'hello')
         data = json.load(request)
         exist = Booking.objects.filter(booking_date=data['booking_date']).filter(
             booking_slot=data['booking_slot']).exists()
@@ -107,7 +107,6 @@ class BookingsView(APIView):
                 booking_date=data['booking_date'],
                 booking_slot=data['booking_slot'],
             )
-            print('#######', booking, type(booking))
             #serializer = BookingSerializer(data=booking)
             #if serializer.is_valid():
             booking.save()
