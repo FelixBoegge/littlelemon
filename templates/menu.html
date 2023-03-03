@@ -14,7 +14,7 @@
                 <p>
                     <div id="category_img_container">
                         <h2 id="category_title">{{ category.title }}</h2>
-                        <a href="{% url 'menuitems' category=category.slug  %}">
+                        <a href="{% url 'categories' category=category.slug  %}">
                             <img src="/../static/img/categories/{{category.slug}}.jpg" alt="{{ category.title }}" id="category_img"/>
                         </a>
                     </div>

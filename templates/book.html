@@ -102,7 +102,6 @@
     }
 
     fetch("{% url 'bookings' %}", { method: 'post', body: JSON.stringify(formdata) })
-    //fetch("{% url 'bookings' %}", { mehtod: 'post', body: formdata})
       .then(r => r.text())
       .then(data => {
         getBookings()

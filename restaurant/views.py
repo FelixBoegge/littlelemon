@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.core import serializers
 from django.contrib.auth.models import User, Group
-from django.contrib.auth import get_user_model, login, authenticate, logout
+from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
 from django.views.generic.edit import FormView
@@ -30,6 +30,7 @@ from .forms import BookingForm, SignupForm, LoginForm
 from datetime import datetime
 import json, requests
 
+User = get_user_model()
 
 class HomeView(APIView):
 
@@ -44,22 +45,16 @@ class MenuView(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get(self, request):
-        
-        #logged_in_users = get_user_model().objects.filter(id__in=Token.objects.all().values('user_id'))
-        #print('5###############', logged_in_users)
-        #if not request.user.is_authenticated:
-        if not request.user.id in Token.objects.all().values('user_id'):
-            print('################', 'anonymous user', request.user)
+        if not request.user.is_authenticated:
             return redirect('loginform')
         else:
-            print('##############', 'YES')
-            token = Token.objects.get(user=request.user.id).key
-            context['Authorization'] = 'Token ' + token
-            print('##############', token)
+            #print('##############', 'YES')
             categories = Category.objects.all()
             context = {'menu': categories}
+            token = Token.objects.get(user=request.user.id).key
+            context['Authorization'] = 'Token ' + token
+            #print('##############', token)
             return render(request, 'menu.html', context) 
-    
 
 class CategoryView(APIView):
     def get(self, request, category):
@@ -74,10 +69,10 @@ class CategoryView(APIView):
 class SingleMenuItemView(APIView):
     def get(self, request, pk):
         if pk: 
-            menu_item = MenuItem.objects.get(pk=pk) 
+            menuitem = MenuItem.objects.get(pk=pk) 
         else: 
-            menu_item = "" 
-        return render(request, 'menu_item.html', {"menu_item": menu_item}) 
+            menuitem = "" 
+        return render(request, 'menuitem.html', {"menuitem": menuitem}) 
 
 class BookView(APIView):
     form = BookingForm()
@@ -101,14 +96,11 @@ class BookingsView(APIView):
         if exist==False:
             booking = Booking(
                 name=data['name'],
-                #user = User.objects.get(Token.objects.get(key=request.auth.key).user_id),
                 user = 'felix',
                 num_guests=data['num_guests'],
                 booking_date=data['booking_date'],
                 booking_slot=data['booking_slot'],
             )
-            #serializer = BookingSerializer(data=booking)
-            #if serializer.is_valid():
             booking.save()
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
@@ -130,7 +122,7 @@ class ReservationsView(APIView):
 class SignupFormView(FormView):
     template_name = 'signup.html'
     form_class = SignupForm
-    success_url = '/user-created/'
+    #success_url = '/user-created/'
     def form_valid(self, form):
         return super().form_valid(form)
     
@@ -159,28 +151,24 @@ class UserCreateView(UserViewSet):
         elif request.method == "DELETE":
             return self.destroy(request, *args, **kwargs)
 
-
 class LoginView(TokenCreateView):
     def _action(self, serializer):
         token = login_user(self.request, serializer.user)
         token_serializer_class = settings.SERIALIZERS.token
         return redirect('home')
-        #return Response(
-        #    data=token_serializer_class(token).data, status=status.HTTP_200_OK)
     
 class LogoutView(TokenDestroyView):
     def post(self, request):
         logout_user(request)
         return redirect('home')
 
-
 class UsersView(APIView):
     @csrf_exempt
     def post(self, request):
         new_user_data = json.load(request)
-        exist = get_user_model().objects.filter(username=new_user_data['username']).exists()
+        exist = User.objects.filter(username=new_user_data['username']).exists()
         if exist==False:
-            new_user = get_user_model()(
+            new_user = User(
                 username = new_user_data['username'],
                 first_name = new_user_data['first_name'],
                 last_name = new_user_data['last_name'],
@@ -193,6 +181,53 @@ class UsersView(APIView):
             return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
+
+
+class CartView(APIView):
+    #permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        carts = Cart.objects.filter(user=user_id)
+        serializer = CartSerializer(carts, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+    
+    @csrf_exempt
+    def post(self, request):
+        print('###########', 'here')
+        data = json.load(request)
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        menuitem_id = MenuItem.objects.get(id=data['menuitem']).pk
+        quantity = request.data['num_items']
+        unit_price = MenuItem.objects.get(pk=menuitem_id).price
+        price = quantity * unit_price
+        cart_item = Cart(
+            user = user_id,
+            menuitem =  menuitem_id,
+            quantity = quantity,
+            unit_price = unit_price,
+            price = price
+        )
+        cart_item.save()
+        return redirect('home')
+        
+        #serializer = CartCreateSerializer(data=cart_item)
+        #if serializer.is_valid():
+        #    serializer.save()
+        #    return Response({'status': 'successfully added cartitem',
+        #                     'data': serializer.data}, status.HTTP_201_CREATED)
+        #return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        carts = Cart.objects.filter(user=user_id)
+        num_carts = len(carts)
+        if num_carts == 0:
+            return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
+        carts.delete()
+        return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
+
+
 
 class ManagerView(APIView):
     permission_classes = [IsAuthenticated]
@@ -273,7 +308,7 @@ class BookingView(APIView):
 class SingleBookingView(APIView):
     pass
 
-class CategoryView(APIView):
+class Category2View(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
@@ -347,7 +382,7 @@ class SingleMenuView(APIView):
         get_object_or_404(MenuItem, pk=pk).delete()
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
     
-class CartView(APIView):
+class CartAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
