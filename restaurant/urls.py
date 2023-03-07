@@ -13,7 +13,7 @@ urlpatterns = [
     path('reservations/', views.ReservationsView.as_view(), name='reservations'),
     
     path('signupform/', views.SignupFormView.as_view(), name='signupform'),
-    path('profile/<str:username>', views.UserCreateView.as_view({'get': 'retrieve'}), name='profile'),
+    path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
     path('user-created/', views.UserCreateSuccessView.as_view()),
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
     path('token/login/', views.LoginView.as_view(), name='token_create'),
@@ -26,7 +26,7 @@ urlpatterns = [
     path('booking/', views.BookingView.as_view()),
     path('booking/<int:pk>', views.SingleBookingView.as_view()),
     path('menuitem/', views.MenuItemsView.as_view()),
-    path('menuitem/<int:pk>', views.SingleMenuItemView.as_view()),
+    path('menuitem/<int:pk>', views.SingleMenuView.as_view()),
     path('category/', views.Category2View.as_view()),
     path('category/<int:pk>', views.SingleCategoryView.as_view()),
     path('cartAPI/', views.CartAPIView.as_view()),

@@ -15,7 +15,7 @@ class UserCreateSerializer(UserCreateSerializer):
         
         
 class BookingSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer(read_only=True)
+    user = UserCreateSerializer(read_only=True)
     class Meta:
         model = Booking
         fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_slot']
@@ -45,7 +45,7 @@ class MenuItemCreateSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     menuitem = serializers.CharField(source='menuitem.title', read_only=True)
-    user = CustomUserSerializer(read_only=True)
+    user = UserCreateSerializer(read_only=True)
     class Meta:
         model = Cart
         fields = ['id', 'user', 'menuitem', 'quantity', 'unit_price', 'price']
@@ -71,7 +71,7 @@ class OrderItemCreateSerialzer(serializers.ModelSerializer):
         
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = CustomUserSerializer(read_only=True)
+    user = UserCreateSerializer(read_only=True)
     order_items = OrderItemSerializer(source='orderitem_set', many=True, read_only=True)
     delivery_crew_name = serializers.CharField(source='delivery_crew.username', read_only=True)
     class Meta:

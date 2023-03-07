@@ -20,7 +20,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 
 from .models import Booking, Category, MenuItem, Cart, Order 
-from .serializers import (UserSerializer, BookingSerializer, CategorySerializer,
+from .serializers import (UserSerializer, UserCreateSerializer, 
+                          BookingSerializer, CategorySerializer,
                           MenuItemSerializer, MenuItemCreateSerializer,
                           CartSerializer, CartCreateSerializer,
                           OrderItemCreateSerialzer,
@@ -35,18 +36,28 @@ User = get_user_model()
 class HomeView(APIView):
 
     def get(self, request):
-        return render(request, 'index.html')
+        if request.user.is_authenticated:
+            token = Token.objects.get(user=request.user.id).key
+            context = {'Authentication': 'Token ' + token}
+        else:
+            context = {}
+        return render(request, 'index.html', context)
 
 class AboutView(APIView):
     def get(self, request):
         return render(request, 'about.html')
 
 class MenuView(APIView):
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    #authentication_classes = [TokenAuthentication, SessionAuthentication]
+    #permission_classes = [IsAuthenticated]
 
     def get(self, request):
         if not request.user.is_authenticated:
-            return redirect('loginform')
+            #return redirect('loginform')
+            categories = Category.objects.all()
+            context = {'menu': categories}
+            return render(request, 'menu.html', context) 
+
         else:
             #print('##############', 'YES')
             categories = Category.objects.all()
@@ -137,12 +148,13 @@ class LoginFormView(FormView):
     def form_valid(self, form):
         return super().form_valid(form)
 
-class UserCreateView(UserViewSet):
+class SingleUserView(UserViewSet):
     @action(["get", "put", "patch", "delete"], detail=False)
     def me(self, request, *args, **kwargs):
         self.get_object = self.get_instance
         if request.method == "GET":
             context = {'data': self.retrieve(request, *args, **kwargs)}
+            print('###########', 'ME')
             return render(request, 'profile.html', context)
         elif request.method == "PUT":
             return self.update(request, *args, **kwargs)
@@ -156,7 +168,8 @@ class LoginView(TokenCreateView):
         token = login_user(self.request, serializer.user)
         token_serializer_class = settings.SERIALIZERS.token
         return redirect('home')
-    
+        
+         
 class LogoutView(TokenDestroyView):
     def post(self, request):
         logout_user(request)
@@ -196,6 +209,7 @@ class CartView(APIView):
     def post(self, request):
         print('###########', 'here')
         data = json.load(request)
+        print('##########', data)
         user_id = Token.objects.get(key=request.auth.key).user_id
         menuitem_id = MenuItem.objects.get(id=data['menuitem']).pk
         quantity = request.data['num_items']
@@ -234,7 +248,7 @@ class ManagerView(APIView):
     
     def get(self, request):
         managers = User.objects.all().filter(groups__name='Manager')
-        serializer = UserSerializer(managers, many=True)
+        serializer = UserCreateSerializer(managers, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
@@ -264,7 +278,7 @@ class DeliveryView(APIView):
     
     def get(self, request):
         delivery_guys = User.objects.all().filter(groups__name='Delivery')
-        serializer = UserSerializer(delivery_guys, many=True)
+        serializer = UserCreateSerializer(delivery_guys, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
@@ -292,10 +306,10 @@ class DeliveryView(APIView):
 class BookingView(APIView):
     permission_classes = [IsAuthenticated]
     
-    #def get(self, request):
-    #    bookings = Booking.objects.all()
-    #    serializer = BookingSerializer(bookings, many=True)
-    #    return Response(serializer.data, status.HTTP_200_OK)
+    def get(self, request):
+        bookings = Booking.objects.all()
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
     
     def post(self, request):
         serializer = BookingSerializer(data=request.data)

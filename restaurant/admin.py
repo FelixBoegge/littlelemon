@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import Booking, Category, MenuItem, Cart, Order, OrderItem
+from .models import CustomUser, Booking, Category, MenuItem, Cart, Order, OrderItem
 
 
+admin.site.register(CustomUser)
 admin.site.register(Booking)
 admin.site.register(Category)
 admin.site.register(MenuItem)

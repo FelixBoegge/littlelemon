@@ -54,6 +54,9 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
     USERNAME_FIELD = 'username'
 
+
+
+
 class Booking(models.Model):
     name = models.CharField(max_length=255, db_index=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

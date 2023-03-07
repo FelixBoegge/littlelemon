@@ -12,7 +12,13 @@
 
     {% if user.is_authenticated %}
     <li class="push"><a href="{% url 'profile' username=user.username %}">{{user.first_name}} {{user.last_name}}</a></li>
-    <li><a href="{% url 'token_destroy' %}">Logout</a></li>
+    <li><a href="{% url 'loginform' %}">Login</a></li>
+
+
+    <li><form id="logout_form" method="post" action="{% url 'token_destroy' %}"></form>
+      <a onclick="document.getElementById('logout_form').submit();">Logout</a></li>
+
+
     <!--<li><form action="{% url 'token_destroy' %}" method="post" id="form">
       {% csrf_token %}
       <input type="submit" id="button" value="Logout"></form></li>-->
