@@ -10,7 +10,7 @@
     <li><a href="{% url 'book' %}">Book</a></li>
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
 
-    {% if user.is_authenticated %}
+    {% if user %}
     <li class="push"><a href="{% url 'profile' username=user.username %}">{{user.first_name}} {{user.last_name}}</a></li>
     <li><a href="{% url 'loginform' %}">Login</a></li>
 

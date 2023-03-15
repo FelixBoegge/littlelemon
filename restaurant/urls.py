@@ -16,6 +16,7 @@ urlpatterns = [
     path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
     path('user-created/', views.UserCreateSuccessView.as_view()),
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
+    path('token/login/', views.CheckUserView.as_view(), name='check_user'),
     path('token/login/', views.LoginView.as_view(), name='token_create'),
     path('token/logout/', views.LogoutView.as_view(), name='token_destroy'),
     

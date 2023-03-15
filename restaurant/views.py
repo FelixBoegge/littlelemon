@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.urls import reverse
 from django.core import serializers
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum
 from django.views.generic.edit import FormView
@@ -167,7 +169,15 @@ class LoginView(TokenCreateView):
     def _action(self, serializer):
         token = login_user(self.request, serializer.user)
         token_serializer_class = settings.SERIALIZERS.token
-        return redirect('home')
+        response = HttpResponseRedirect(reverse('home'))
+        response.set_cookie('authToken', token, httponly=True, secure=True)
+        return response
+    
+class CheckUserView(APIView):
+    def post(self, request):     
+        user_id = Token.objects.get(key=request.auth.key).user_id
+        user = User.objects.get(id=user_id)
+        return JsonResponse({'message': 'Authenticated', 'user': user}, status=200)
         
          
 class LogoutView(TokenDestroyView):
