@@ -10,16 +10,23 @@
     <li><a href="{% url 'book' %}">Book</a></li>
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
 
-    {% if user %}
-    <li class="push"><a href="{% url 'profile' username=user.username %}">{{user.first_name}} {{user.last_name}}</a></li>
-    <li><a href="{% url 'loginform' %}">Login</a></li>
+    {% if request.COOKIES.authToken %}
+    <li class="push"><a href="{% url 'profile' username=request.COOKIES.username %}">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</a></li>
+    <li>
+      <!--<form id="logout-form" method="POST" action="{% url 'token_destroy' %}">
+        {% csrf_token %}
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <input type="hidden" name="auth_token" value="{{ request.COOKIES.authToken }}">
+        <button type="submit">Logout</button>
+      </form>-->
+      <button tpe="button" id="button">Logout</button>     
+    </li>
 
-
-    <li><form id="logout_form" method="post" action="{% url 'token_destroy' %}"></form>
+    <!--<li><form id="logout_form" method="post" action="{% url 'token_destroy' %}"></form>
       <a onclick="document.getElementById('logout_form').submit();">Logout</a></li>
 
 
-    <!--<li><form action="{% url 'token_destroy' %}" method="post" id="form">
+    <li><form action="{% url 'token_destroy' %}" method="post" id="form">
       {% csrf_token %}
       <input type="submit" id="button" value="Logout"></form></li>-->
     {% else %}
@@ -28,3 +35,17 @@
     {% endif %}
   </ul>
 </nav>
+
+<script>
+  document.getElementById('button').addEventListener('click', function (e) {
+    
+    fetch("{% url 'token_destroy' %}", {
+      method: 'post',
+      headers: {
+        'Authentication': request.COOKIES.authToken
+      }
+    })
+    .then(r => r.json())
+    .then(data => {})
+    })
+</script>

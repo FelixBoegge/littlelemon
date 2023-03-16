@@ -169,21 +169,36 @@ class LoginView(TokenCreateView):
     def _action(self, serializer):
         token = login_user(self.request, serializer.user)
         token_serializer_class = settings.SERIALIZERS.token
-        response = HttpResponseRedirect(reverse('home'))
-        response.set_cookie('authToken', token, httponly=True, secure=True)
-        return response
-    
-class CheckUserView(APIView):
-    def post(self, request):     
-        user_id = Token.objects.get(key=request.auth.key).user_id
+        user_id = Token.objects.get(key=token).user_id
         user = User.objects.get(id=user_id)
-        return JsonResponse({'message': 'Authenticated', 'user': user}, status=200)
+        response = HttpResponseRedirect(reverse('home'))
+        response.set_cookie('authToken', token, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('username', user.username, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('firstName', user.first_name, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('lastName', user.last_name, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('email', user.email, httponly=True, secure=True, samesite='Lax')
+        return response
+
+    
+#class CheckUserView(APIView):
+#    def post(self, request):     
+#        user_id = Token.objects.get(key=request.auth.key).user_id
+#        user = User.objects.get(id=user_id)
+#        return JsonResponse({'message': 'authenticated', 'user': user}, status=200)
         
          
 class LogoutView(TokenDestroyView):
     def post(self, request):
+        print(request.auth_token)
         logout_user(request)
-        return redirect('home')
+        response = HttpResponseRedirect(reverse('home'))
+        response.delete_cookie('authToken')
+        response.delete_cookie('username')
+        response.delete_cookie('firstName')
+        response.delete_cookie('lastName')
+        response.delete_cookie('email')
+        return response
+        #return redirect('home')
 
 class UsersView(APIView):
     @csrf_exempt

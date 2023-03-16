@@ -47,21 +47,6 @@
 </html>
 
 <script>
-  fetch("{% url 'check_user' %}", {
-  headers: {
-    Authorization: `Bearer ${authToken}` // Send the auth token in the "Authorization" header
-  },
-  credentials: 'include' // Include credentials (cookies, HTTP auth, etc.) in the request
-})
-  .then(response => {
-    if (response.ok) {
-      // The user is authenticated, so update the navigation bar accordingly
-      const user = response.json().user;
-    }
-  })
-  .catch(error => {
-    // Handle the error
-    console.error(error);
-  });
+  
 
 </script>
