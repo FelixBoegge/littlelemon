@@ -11,7 +11,7 @@
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
 
     {% if request.COOKIES.authToken %}
-    <li class="push"><a href="{% url 'profile' username=request.COOKIES.username %}">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</a></li>
+    <li class="push"><a href="#" onclick="add_authToken()">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</a></li>
     <li>
       <!--<form id="logout-form" method="POST" action="{% url 'token_destroy' %}">
         {% csrf_token %}
@@ -37,11 +37,9 @@
 </nav>
 
 <script>
-  document.getElementById('button').addEventListener('click', function (e) {
-
-    // retrieve authToken from cookies
+  function get_authToken() {
     const cookies = document.cookie;
-    const cookieArray = cookies.split(';');
+    const cookieArray = cookies.split('; ');
     let authToken = '';
     for (let i = 0; i < cookieArray.length; i++) {
       const cookie = cookieArray[i].trim();
@@ -50,7 +48,26 @@
         break;
       }
     }
+    return authToken;
+  }
+
+  function add_authToken() {
+    const authToken = get_authToken();
     console.log(authToken);
+    const profileURL = 'profile/';
+    const request = new XMLHttpRequest();
+    request.open('GET', profileURL);
+    request.setRequestHeader('Authorization', `Token ${authToken}`);
+    request.send();
+    event.preventDefault();
+  }
+
+
+
+  document.getElementById('button').addEventListener('click', function (e) {
+
+    // retrieve authToken from cookies
+    authToken = get_authToken();
 
     // construct headers
     const headers = new Headers();

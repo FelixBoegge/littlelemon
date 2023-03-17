@@ -150,20 +150,7 @@ class LoginFormView(FormView):
     def form_valid(self, form):
         return super().form_valid(form)
 
-class SingleUserView(UserViewSet):
-    @action(["get", "put", "patch", "delete"], detail=False)
-    def me(self, request, *args, **kwargs):
-        self.get_object = self.get_instance
-        if request.method == "GET":
-            context = {'data': self.retrieve(request, *args, **kwargs)}
-            print('###########', 'ME')
-            return render(request, 'profile.html', context)
-        elif request.method == "PUT":
-            return self.update(request, *args, **kwargs)
-        elif request.method == "PATCH":
-            return self.partial_update(request, *args, **kwargs)
-        elif request.method == "DELETE":
-            return self.destroy(request, *args, **kwargs)
+
 
 class LoginView(TokenCreateView):
     def _action(self, serializer):
@@ -198,6 +185,21 @@ class LogoutView(TokenDestroyView):
         response.delete_cookie('lastName')
         response.delete_cookie('email')
         return response
+
+class SingleUserView(UserViewSet):
+    @action(["get", "put", "patch", "delete"], detail=False)
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        if request.method == "GET":
+            context = {'data': self.retrieve(request, *args, **kwargs)}
+            print('###########', 'ME')
+            return render(request, 'profile.html', context)
+        elif request.method == "PUT":
+            return self.update(request, *args, **kwargs)
+        elif request.method == "PATCH":
+            return self.partial_update(request, *args, **kwargs)
+        elif request.method == "DELETE":
+            return self.destroy(request, *args, **kwargs)
 
 class UsersView(APIView):
     @csrf_exempt
