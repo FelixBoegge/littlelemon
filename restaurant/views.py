@@ -189,16 +189,15 @@ class LoginView(TokenCreateView):
          
 class LogoutView(TokenDestroyView):
     def post(self, request):
-        print(request.auth_token)
+        print('###########', 'logout')
         logout_user(request)
-        response = HttpResponseRedirect(reverse('home'))
+        response = HttpResponseRedirect(reverse('about'))
         response.delete_cookie('authToken')
         response.delete_cookie('username')
         response.delete_cookie('firstName')
         response.delete_cookie('lastName')
         response.delete_cookie('email')
         return response
-        #return redirect('home')
 
 class UsersView(APIView):
     @csrf_exempt

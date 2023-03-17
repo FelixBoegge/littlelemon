@@ -19,7 +19,7 @@
         <input type="hidden" name="auth_token" value="{{ request.COOKIES.authToken }}">
         <button type="submit">Logout</button>
       </form>-->
-      <button tpe="button" id="button">Logout</button>     
+      <button type="button" id="button">Logout</button>  
     </li>
 
     <!--<li><form id="logout_form" method="post" action="{% url 'token_destroy' %}"></form>
@@ -38,14 +38,37 @@
 
 <script>
   document.getElementById('button').addEventListener('click', function (e) {
-    
+
+    // retrieve authToken from cookies
+    const cookies = document.cookie;
+    const cookieArray = cookies.split(';');
+    let authToken = '';
+    for (let i = 0; i < cookieArray.length; i++) {
+      const cookie = cookieArray[i].trim();
+      if (cookie.startsWith('authToken=')) {
+        authToken = cookie.substring('authToken='.length, cookie.length);
+        break;
+      }
+    }
+    console.log(authToken);
+
+    // construct headers
+    const headers = new Headers();
+    headers.append('Authorization', `Token ${authToken}`);
+
     fetch("{% url 'token_destroy' %}", {
-      method: 'post',
-      headers: {
-        'Authentication': request.COOKIES.authToken
+      method: 'POST',
+      headers: headers
+    })
+    .then(response => {
+      if (response.ok) {
+        window.location.href = '/';
+      } else {
+        throw new Error('Logout failed');
       }
     })
-    .then(r => r.json())
-    .then(data => {})
+    .catch(error => {
+      console.error(error);
     })
+  })
 </script>
