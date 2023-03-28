@@ -88,6 +88,25 @@ nav ul a:hover {
     text-decoration-thickness: 0.1rem;
 }
 
+nav ul .logoutButton {
+    color: #EDEFEE;
+    text-decoration: none;
+    list-style: none;
+    font-size: 1.5rem;
+    text-align: center;
+    padding-inline-start: 0rem;
+    margin-bottom: 0px;
+}
+
+nav ul .logoutButton:active {
+    text-decoration: underline;
+}
+
+nav ul .logoutButton:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 0.1rem;
+}
+
 section {
     display: flex;
     gap: 2rem 1rem;

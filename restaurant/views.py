@@ -159,14 +159,21 @@ class LoginView(TokenCreateView):
         user_id = Token.objects.get(key=token).user_id
         user = User.objects.get(id=user_id)
         response = HttpResponseRedirect(reverse('home'))
-        response.set_cookie('authToken', token, httponly=True, secure=True, samesite='Lax')
-        response.set_cookie('username', user.username, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('authToken', token, secure=True, samesite='Lax')
+        response.set_cookie('username', user.username, secure=True, samesite='Lax')
         response.set_cookie('firstName', user.first_name, httponly=True, secure=True, samesite='Lax')
         response.set_cookie('lastName', user.last_name, httponly=True, secure=True, samesite='Lax')
         response.set_cookie('email', user.email, httponly=True, secure=True, samesite='Lax')
         return response
 
-    
+#def get_auth_token(request):
+#    print(request.user)
+#    if request.user.is_authenticated:
+#        token = request.auth.token(request.user)
+#        return JsonResponse({'authToken': token})
+#    else:
+#        return JsonResponse({}, status=401)
+
 #class CheckUserView(APIView):
 #    def post(self, request):     
 #        user_id = Token.objects.get(key=request.auth.key).user_id
@@ -178,7 +185,7 @@ class LogoutView(TokenDestroyView):
     def post(self, request):
         print('###########', 'logout')
         logout_user(request)
-        response = HttpResponseRedirect(reverse('about'))
+        response = HttpResponseRedirect(reverse('loginform'))
         response.delete_cookie('authToken')
         response.delete_cookie('username')
         response.delete_cookie('firstName')

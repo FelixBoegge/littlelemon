@@ -13,10 +13,12 @@ urlpatterns = [
     path('reservations/', views.ReservationsView.as_view(), name='reservations'),
     
     path('signupform/', views.SignupFormView.as_view(), name='signupform'),
-    path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
-    #path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
+    #path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
+    path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
     path('user-created/', views.UserCreateSuccessView.as_view()),
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
+    #path('get-auth-token/', views.get_auth_token, name='get_auth_token'),
+
     #path('token/check-user/', views.CheckUserView.as_view(), name='check_user'),
     path('token/login/', views.LoginView.as_view(), name='token_create'),
     path('token/logout/', views.LogoutView.as_view(), name='token_destroy'),
