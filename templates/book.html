@@ -12,10 +12,6 @@
         <form method="POST" id="form">
         {% csrf_token %}
           <p>
-            <label for="name">Name:</label>
-            <input type="text" placeholder="Your Name" maxlength="200" required="true" id="name">
-          </p>
-          <p>
             <label for="num_guests">Guests:</label>
             <input type="text" placeholder="Number of Guests" maxlength="2" required="true" id="num_guests">
           </p>
@@ -57,7 +53,7 @@
     document.getElementById('today').innerHTML = date
 
     fetch("{% url 'bookings' %}" + '?date=' + date)
-      .then(r => r.json())
+      .then(response => response.json())
       .then(data => {
         reserved_slots = []
         bookings = ''
@@ -95,17 +91,21 @@
 
   document.getElementById('button').addEventListener('click', function (e) {
     const formdata = {
-      name: document.getElementById('name').value,
+      username: getCookie('username'),
       num_guests: document.getElementById('num_guests').value,
       booking_date: document.getElementById('booking_date').value,
       booking_slot: document.getElementById('booking_slot').value,
     }
 
-    fetch("{% url 'bookings' %}", { method: 'post', body: JSON.stringify(formdata) })
-      .then(r => r.text())
-      .then(data => {
-        getBookings()
-      })
+    fetch("{% url 'bookings' %}", {
+      method: 'POST',
+      body: JSON.stringify(formdata)
+    })
+    .then(response => response.text())
+    .then(data => {
+      getBookings()
+    })
   })
+  
 </script>
 {% endblock %}

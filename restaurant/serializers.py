@@ -18,7 +18,7 @@ class BookingSerializer(serializers.ModelSerializer):
     user = UserCreateSerializer(read_only=True)
     class Meta:
         model = Booking
-        fields = ['id', 'name', 'user', 'num_guests', 'booking_date', 'booking_slot']
+        fields = ['id', 'user', 'name', 'num_guests', 'booking_date', 'booking_slot']
         extra_kwargs = {
             'booking_slot': {'min_value': 10, 'max_value': 22}
         }       

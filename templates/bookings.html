@@ -4,7 +4,7 @@
 {% block content %}
 <section>
   <article>
-    <h1>All Reservations</h1>
+    <h1>Your Reservations</h1>
     <!--Begin row-->
     <div class="row">
       <!--Begin col-->
@@ -13,24 +13,17 @@
         {% for booking in bookings %}
         <p>
           <h2>
-            {{ booking.name }}
+            {{ booking.booking_date }}
           </h2>
-          <div class="num_guests">
-            Number of guests: {{ booking.num_guests }}
-          </div>
-          <div class="booking_date">
-            Date: {{ booking.booking_date }}
-          </div>
           <div class="booking_slot">
-            Time: {{ booking.booking_slot }}
+            {{ booking.booking_slot }}
           </div>
-      </p>
-      {% endfor %}
-
+          <div class="num_guests">
+            {{ booking.num_guests }} guests
+          </div>
+        </p>
+        {% endfor %}
       </div>
-      <!--End col-->
-
-      <!--Begin col-->
       <div class="column">
         <div class="videowrap">
           <iframe
@@ -39,17 +32,11 @@
             referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
       </div>
-      <!--End col-->
     </div>
-    <!--End row-->
-
-
-
-
   </article>
 </section>
+
 <script>
-  
 </script>
 {% endblock %}
 

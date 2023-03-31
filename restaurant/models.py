@@ -58,14 +58,14 @@ class CustomUser(AbstractUser):
 
 
 class Booking(models.Model):
-    name = models.CharField(max_length=255, db_index=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
     num_guests = models.SmallIntegerField()
     booking_date = models.DateField()
     booking_slot = models.SmallIntegerField()
     
     def __str__(self) -> str:
-        return self.name
+        return f'{self.user.username} {self.num_guests}guests'
     
     
 class Category(models.Model):

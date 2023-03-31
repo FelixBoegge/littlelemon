@@ -24,10 +24,10 @@
                 Price: ${{ menuitem.price }}
             </p>
             <p>
-               <form method="post" id="form">
+               <form method="POST" id="form">
                {% csrf_token %}
-                  <input type="number" default="1" min="1" max="10" required="true" id="num_items" name="num_items">
-                  <button type="button" id="button">Add to Cart</button>
+                  <p><input type="number" default="1" min="1" max="10" required="true" id="num_items" name="num_items"></p>
+                  <button type="button" id="addCartButton">Add to Cart</button>
                </form>
                
             </p>
@@ -44,29 +44,32 @@
 </section>
 
 <script>
-   document.getElementById('button').addEventListener('click', function (e) {
+   document.getElementById('addCartButton').addEventListener('click', function (e) {
       const cartdata = {
-         menuitem: document.getElementById('item_name').value,
-         num_items: document.getElementById('num_items').value,
+         menuitem: String(document.getElementById('item_name').value),
+         num_items: String(document.getElementById('num_items').value),
       }
-      const headers = {
-         'Accept': 'application/json',
-         'Content-Type':'application/json',
-         'Authentication': 'Token 3178b36e3c6541932bda7b4b0ba99f12248f497e'
-      }
-
-      try {
-         fetch("{% url 'cart' %}", {
-            method: 'post',
-            headers: headers,
-            body: JSON.stringify(cartdata) })
-            .then(response => {
-               return response.json()})
-            .then(data => alert(data))
-         }
-         catch (error) { alert('An error occurred!');
-      }
+      fetch("{% url 'cart' %}", {
+         method: 'POST',
+         headers: {
+            'Authorization': `Token ${getCookie('authToken')}`,
+            'X-CSRFToken': getCookie('csrftoken')
+         },
+         body: JSON.stringify(cartdata)
       })
+      .then(response => {
+         if (response.ok) {
+            console.log('add cartitem');
+            window.location.href = "{% url 'home' %}";
+         } else {
+            throw new Error('invalid cart data');
+         }
+      })
+      .catch(error => {
+         console.error(error);
+      })
+   })
+
 </script>
 
 {% endblock %}
