@@ -43,5 +43,167 @@
     </main>
     {% include 'partials/_footer.html' %} 
   </body>
-
 </html>
+
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    } else {
+      cookieValue = null;
+    }
+    return cookieValue;
+  }
+
+  // Home button
+  document.getElementById('navHomeButton').addEventListener('click', function() {
+    fetch("{% url 'home' %}", {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${getCookie('authToken')}`,
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    })
+    .then(response => {
+      console.log(getCookie('authToken'));
+      if (response.ok) {
+        window.location.href = "{% url 'home' %}";
+      } else {
+        throw new Error("Authentication failed");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  });
+
+  // About button
+  document.getElementById('navAboutButton').addEventListener('click', function() {
+    fetch("{% url 'about' %}", {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${getCookie('authToken')}`,
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    })
+    .then(response => {
+      console.log(getCookie('authToken'));
+      if (response.ok) {
+        console.log('whats up');
+      } else {
+        throw new Error("Authentication failed");
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  });
+
+  
+
+  // Menu button
+  document.getElementById('navMenuButton').addEventListener('click', function() {
+    fetch("{% url 'menu' %}", {
+      method: 'GET',
+      headers: {
+        'Authorization': `Token ${getCookie('authToken')}`,
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      } else {
+        throw new Error('Authentication failed');
+      }
+      })
+    .then(html => {
+      document.body.innerHTML = html;
+      window.history.pushState(null, null, "{% url 'menu' %}");
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  });
+
+
+
+
+
+
+  var loginButton = document.getElementById('navLoginButton');
+  if (loginButton) {
+    loginButton.addEventListener('click', function() {
+      const container = document.createElement('div');
+      container.id = 'content';
+      document.body.appendChild(container);
+      fetch("{% url 'loginform' %}", {
+        method: 'GET'
+      })
+      .then(response => response.json())
+      .then(data => {
+        const templateHtml = data.html;
+        document.getElementById('content').innerHTML = templateHtml;
+      })
+      .catch(error => {
+        console.error(error);
+      })
+    })
+  }
+
+  var profileButton = document.getElementById('navProfileButton');
+  if (profileButton) {
+    profileButton.addEventListener('click', function() {
+      fetch(`profile/${getCookie('username')}`, {
+        method: 'GET',
+        headers: {
+        'Authorization': `Token ${getCookie('authToken')}`,
+        'X-CSRFToken': getCookie('csrftoken')
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log('show profile page');
+        } else {
+          throw new Error('loading profile page failed');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      })
+    })
+  }
+
+
+  var logoutButton = document.getElementById('navLogoutButton');
+  if (logoutButton) {
+    logoutButton.addEventListener('click', function() {
+      fetch("{% url 'token_destroy' %}", {
+        method: 'POST',
+        headers: {
+        'Authorization': `Token ${getCookie('authToken')}`,
+        'X-CSRFToken': getCookie('csrftoken')
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = 'loginform';
+          console.log('successfully logged out')
+        } else {
+          throw new Error('logout failed');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      })
+    })
+  }
+</script>

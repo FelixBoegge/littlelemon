@@ -5,8 +5,8 @@ from django.contrib.auth.base_user import BaseUserManager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, first_name=None, last_name=None, password=None, **extra_fields):
         """
-        Creates and saves a User with the given usernname, email, first_name,
-        last_name and password.
+        Creates and saves a user with the given usernname, email, first_name,
+        last_name and password
         """
         if not username:
             raise ValueError("Users must have a valid username")

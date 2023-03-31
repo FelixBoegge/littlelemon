@@ -36,38 +36,40 @@ import json, requests
 User = get_user_model()
 
 class HomeView(APIView):
-
     def get(self, request):
         if request.user.is_authenticated:
+            print(f'########## Home - {request.user.username} logged in')
             token = Token.objects.get(user=request.user.id).key
             context = {'Authentication': 'Token ' + token}
         else:
+            print('############# Home not logged in')
             context = {}
         return render(request, 'index.html', context)
 
 class AboutView(APIView):
     def get(self, request):
-        return render(request, 'about.html')
+        if request.user.is_authenticated:
+            print(f'########## About - {request.user.username} logged in')
+            token = Token.objects.get(user=request.user.id).key
+            context = {'Authentication': 'Token ' + token}
+        else:
+            print('############# About not logged in')
+            context = {}
+        return render(request, 'about.html', context)
 
 class MenuView(APIView):
     #authentication_classes = [TokenAuthentication, SessionAuthentication]
     #permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_authenticated:
-            #return redirect('loginform')
+        if request.user.is_authenticated:
+            print(f'########## Menu - {request.user.username} logged in')
             categories = Category.objects.all()
             context = {'menu': categories}
-            return render(request, 'menu.html', context) 
-
+            return render(request, 'menu.html', context)
         else:
-            #print('##############', 'YES')
-            categories = Category.objects.all()
-            context = {'menu': categories}
-            token = Token.objects.get(user=request.user.id).key
-            context['Authorization'] = 'Token ' + token
-            #print('##############', token)
-            return render(request, 'menu.html', context) 
+            print('############ Menu not logged in')
+            return redirect('loginform')
 
 class CategoryView(APIView):
     def get(self, request, category):
@@ -161,9 +163,9 @@ class LoginView(TokenCreateView):
         response = HttpResponseRedirect(reverse('home'))
         response.set_cookie('authToken', token, secure=True, samesite='Lax')
         response.set_cookie('username', user.username, secure=True, samesite='Lax')
-        response.set_cookie('firstName', user.first_name, httponly=True, secure=True, samesite='Lax')
-        response.set_cookie('lastName', user.last_name, httponly=True, secure=True, samesite='Lax')
-        response.set_cookie('email', user.email, httponly=True, secure=True, samesite='Lax')
+        response.set_cookie('firstName', user.first_name, secure=True, samesite='Lax')
+        response.set_cookie('lastName', user.last_name, secure=True, samesite='Lax')
+        response.set_cookie('email', user.email, secure=True, samesite='Lax')
         return response
 
 #def get_auth_token(request):

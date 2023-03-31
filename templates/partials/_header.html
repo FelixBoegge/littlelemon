@@ -4,108 +4,18 @@
 </header>
 <nav>
   <ul class="main-nav">
-    <li><a href="{% url 'home' %}">Home</a></li>
-    <li><a href="{% url 'about' %}">About</a></li>
-    <li><a href="{% url 'menu' %}">Menu</a></li>
-    <li><a href="{% url 'book' %}">Book</a></li>
-    <li><a href="{% url 'reservations' %}">Reservations</a></li>
-
+    <li><button type="button" class="button" id="navHomeButton">Home</button></li>
+    <li><button type="button" class="button" id="navAboutButton">About</button></li>
+    <li><button type="button" class="button" id="navMenuButton">Menu</button></li>
+    <li><button type="button" class="button" id="navBookButton">Book</button></li>
+    <li><button type="button" class="button" id="navReservationButton">Reservations</button></li>
     {% if request.COOKIES.authToken %}
-    <li class="push"><a href="#" onclick="add_authToken()">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</a></li>
-    <li><button type="button" id="profileButton">{{ request.COOKIES.firstName }}</button></li>
-    <li><button type="button" id="logoutButton">Logout</button></li>
+    <li><button type="button" class="push button" id="navProfileButton">{{ request.COOKIES.username }}</button></li>
+    <li><button type="button" class="button" id="navLogoutButton">Logout</button></li>
     {% else %}
-    <li class="push"><a href="{% url 'signupform' %}">Sign Up</a></li>
+    <li><button type="button" class="push button" id="navSignupButton">Sign Up</button></li>
+    <li><button type="button" class="button" id="navLoginButton">Login</button></li>
     <li><a href="{% url 'loginform' %}">Login</a></li>
     {% endif %}
   </ul>
 </nav>
-
-
-
-<script>
-  function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  } else {
-    cookieValue = null;
-  }
-  return cookieValue;
-}
-
-
-  function add_authToken() {
-    const authToken = getCookie('authToken');
-    const username = getCookie('username');
-    const profileURL = `profile/${username}`;
-    const request = new XMLHttpRequest();
-    request.open('GET', profileURL);
-    request.setRequestHeader('Authorization', `Token ${authToken}`);
-    request.send();
-    event.preventDefault();
-  }
-
-  var profileButton = document.getElementById('profileButton');
-  if (profileButton) {
-    profileButton.addEventListener('click', function (f) {
-      const authToken = getCookie('authToken');
-      const username = getCookie('username');
-      const headers = new Headers();
-      headers.append('Authorization', `Token ${authToken}`);
-
-      fetch(`profile/${username}`, {
-        method: 'GET',
-        headers: headers
-      })
-      .then(response => {
-        if (response.ok) {
-          console.log('show profile page');
-        } else {
-          throw new Error('loading profile page failed');
-        }
-      })
-      .catch(error => {
-        console.error(error);
-      })
-    })
-  }
-
-
-  var logoutButton = document.getElementById('logoutButton');
-  if (logoutButton) {
-    logoutButton.addEventListener('click', function (e) {
-
-      // retrieve authToken from cookies
-      const authToken = getCookie('authToken');
-
-      // construct headers
-      const headers = new Headers();
-      headers.append('Authorization', `Token ${authToken}`);
-
-      fetch("{% url 'token_destroy' %}", {
-        method: 'POST',
-        headers: headers
-      })
-      .then(response => {
-        if (response.ok) {
-          window.location.href = 'loginform';
-          console.log('successfully logged out')
-        } else {
-          throw new Error('logout failed');
-        }
-      })
-      .catch(error => {
-        console.error(error);
-      })
-    })
-  }
-
-</script>
