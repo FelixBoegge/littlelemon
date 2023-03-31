@@ -94,11 +94,10 @@ nav .button {
     text-align: center;
     padding-inline-start: 0rem;
     margin-bottom: 0px;
-
     padding: 0px;
-    width: 80%;
     display: block;
     line-height: 25px;
+    width: 100%;
 }
 
 nav .button:active {
@@ -109,12 +108,15 @@ nav .button:active {
 
 nav .button:hover {
     cursor: pointer;
+    color: lightgray;
     text-decoration: underline;
     text-decoration-thickness: 0.1rem;
 }
 
 nav .push {
-    margin-left: auto;
+    color: pink;
+    margin-left:auto;
+    float: none;
 }
 
 section {

@@ -11,11 +11,11 @@
     <li><button type="button" class="button" id="navReservationButton">Reservations</button></li>
     <li><button type="button" class="button" id="navCartButton">Cart</button></li>
     {% if request.COOKIES.authToken %}
-    <li><button type="button" class="push button" id="navProfileButton">{{ request.COOKIES.username }}</button></li>
-    <li><button type="button" class="button" id="navLogoutButton">Logout</button></li>
+    <li><button type="button" class="button push" id="navProfileButton">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</button></li>
+    <li><button type="button" class="button push" id="navLogoutButton">Logout</button></li>
     {% else %}
-    <li><button type="button" class="push button" id="navSignupButton">Sign Up</button></li>
-    <li><button type="button" class="button" id="navLoginButton">Login</button></li>
+    <li><button type="button" class="button push" id="navSignupButton">SignUp</button></li>
+    <li><button type="button" class="button push" id="navLoginButton">Login</button></li>
     {% endif %}
   </ul>
 </nav>
