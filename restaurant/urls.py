@@ -14,9 +14,9 @@ urlpatterns = [
     path('reservations/', views.ReservationsView.as_view(), name='reservations'),
     
     path('signupform/', views.SignupFormView.as_view(), name='signupform'),
-    #path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
-    path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
-    path('user-created/', views.UserCreateSuccessView.as_view()),
+    path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
+    #path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
+    path('userprofile/', views.ProfileView.as_view(), name='userprofile'),
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
     #path('get-auth-token/', views.get_auth_token, name='get_auth_token'),
 

@@ -180,19 +180,12 @@ class SignupFormView(FormView):
     form_class = SignupForm
     def form_valid(self, form):
         return super().form_valid(form)
-    
-class UserCreateSuccessView(APIView):
-    def get(self, request):
-        success_messege = "<html><body><h1>Successfully created new User!</h1></body></html>"
-        return HttpResponse(success_messege)
 
 class LoginFormView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
     def form_valid(self, form):
         return super().form_valid(form)
-
-
 
 class LoginView(TokenCreateView):
     def _action(self, serializer):
@@ -220,20 +213,35 @@ class LogoutView(TokenDestroyView):
         response.delete_cookie('email')
         return response
 
+class ProfileView(APIView):
+    def get(self, request):
+        print('######### here')
+        user = request.user
+        serialized_user = UserCreateSerializer(user)
+        print(user.username)
+        context = {'user': user}
+        return Response(serialized_user, status.HTTP_200_OK)
+
 class SingleUserView(UserViewSet):
-    @action(["get", "put", "patch", "delete"], detail=False)
-    def me(self, request, *args, **kwargs):
-        self.get_object = self.get_instance
-        if request.method == "GET":
-            context = {'data': self.retrieve(request, *args, **kwargs)}
-            print('###########', 'ME')
-            return render(request, 'profile.html', context)
-        elif request.method == "PUT":
-            return self.update(request, *args, **kwargs)
-        elif request.method == "PATCH":
-            return self.partial_update(request, *args, **kwargs)
-        elif request.method == "DELETE":
-            return self.destroy(request, *args, **kwargs)
+    def retrieve(self, request, *args, **kwargs):
+        print('######### here')
+        user = request.user
+        print(user.username)
+        context = {'user': user}
+        return render(request, 'profile.html', context)
+    #@action(["get", "put", "patch", "delete"], detail=False)
+    #def me(self, request, *args, **kwargs):
+    #    self.get_object = self.get_instance
+    #    if request.method == "GET":
+    #        context = {'data': self.retrieve(request, *args, **kwargs)}
+    #        print('###########', 'ME')
+    #        return render(request, 'profile.html', context)
+    #    elif request.method == "PUT":
+    #        return self.update(request, *args, **kwargs)
+    #    elif request.method == "PATCH":
+    #        return self.partial_update(request, *args, **kwargs)
+    #    elif request.method == "DELETE":
+    #        return self.destroy(request, *args, **kwargs)
 
 class UsersView(APIView):
     @csrf_exempt

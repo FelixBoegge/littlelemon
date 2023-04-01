@@ -38,7 +38,7 @@
 
   <body>
     {% include 'partials/_header.html' %}
-    <main>
+    <main id="content">
       {% block content %} {% endblock %}
     </main>
     {% include 'partials/_footer.html' %} 
@@ -186,10 +186,6 @@
   });
 
 
-  // Sign Up Button    TO DO
-  
-
-
 
   // Login Button
   var loginButton = document.getElementById('navLoginButton');
@@ -215,22 +211,24 @@
   var profileButton = document.getElementById('navProfileButton');
   if (profileButton) {
     profileButton.addEventListener('click', function() {
-      fetch(`profile/${getCookie('username')}`, {
+      const username = getCookie('username');
+      console.log(username);
+      console.log(typeof username);
+      fetch("{% url 'userprofile' %}", {
         method: 'GET',
         headers: {
         'Authorization': `Token ${getCookie('authToken')}`,
         'X-CSRFToken': getCookie('csrftoken')
         }
       })
-      .then(response => {
-        if (response.ok) {
-          console.log('show profile page');
-        } else {
-          throw new Error('loading profile page failed');
-        }
+      .then(response => response.json())
+      .then(data => {
+        const template = Handlebars.compile('profile.html');
+        const rendered = template(data);
+        document.querySelector('#content').innerHTML = rendered;
       })
       .catch(error => {
-        console.error(error);
+        console.error('Error fetching data: ', error);
       })
     });
   }
