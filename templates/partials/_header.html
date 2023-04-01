@@ -14,7 +14,7 @@
     <li><button type="button" class="button push" id="navProfileButton">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</button></li>
     <li><button type="button" class="button push" id="navLogoutButton">Logout</button></li>
     {% else %}
-    <li><button type="button" class="button push" id="navSignupButton">SignUp</button></li>
+    <li><button type="button" class="button push" id="navSignUpButton" onclick="window.location.href='{% url 'signupform' %}'">SignUp</button></li>
     <li><button type="button" class="button push" id="navLoginButton">Login</button></li>
     {% endif %}
   </ul>

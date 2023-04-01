@@ -132,7 +132,6 @@ class ReservationsView(APIView):
         bookings = Booking.objects.filter(user=User.objects.get(username='lukas'))
         return render(request, 'bookings.html', {'bookings': bookings})
     
-    
 class CartView(APIView):
     #permission_classes = [IsAuthenticated]
     
@@ -146,13 +145,12 @@ class CartView(APIView):
     
     @csrf_exempt
     def post(self, request):
-        print('###########', 'here')
         data = json.load(request)
         user = request.user
-        menuitem = MenuItem.objects.get(id=data['menuitem'])
+        menuitem = MenuItem.objects.get(title=data['menuitem'])
         exist = Cart.objects.filter(user=user).filter(menuitem=menuitem).exists()
         if exist == False:
-            quantity = request.data['num_items']
+            quantity = int(data['num_items'])
             unit_price = MenuItem.objects.get(pk=menuitem.id).price
             price = quantity * unit_price
             cart_item = Cart(
@@ -166,14 +164,7 @@ class CartView(APIView):
             return HttpResponse(status.HTTP_200_OK)
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
-        #return redirect('home')
         
-        #serializer = CartCreateSerializer(data=cart_item)
-        #if serializer.is_valid():
-        #    serializer.save()
-        #    return Response({'status': 'successfully added cartitem',
-        #                     'data': serializer.data}, status.HTTP_201_CREATED)
-        #return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         user_id = Token.objects.get(key=request.auth.key).user_id
@@ -187,7 +178,6 @@ class CartView(APIView):
 class SignupFormView(FormView):
     template_name = 'signup.html'
     form_class = SignupForm
-    #success_url = '/user-created/'
     def form_valid(self, form):
         return super().form_valid(form)
     
@@ -217,10 +207,7 @@ class LoginView(TokenCreateView):
         response.set_cookie('lastName', user.last_name, secure=True, samesite='Lax')
         response.set_cookie('email', user.email, secure=True, samesite='Lax')
         return response
-
-
        
-         
 class LogoutView(TokenDestroyView):
     def post(self, request):
         print('###########', 'logout')

@@ -46,8 +46,8 @@
 <script>
    document.getElementById('addCartButton').addEventListener('click', function (e) {
       const cartdata = {
-         menuitem: String(document.getElementById('item_name').value),
-         num_items: String(document.getElementById('num_items').value),
+         menuitem: "{{ menuitem.title }}",
+         num_items: document.getElementById('num_items').value,
       }
       fetch("{% url 'cart' %}", {
          method: 'POST',
@@ -60,7 +60,7 @@
       .then(response => {
          if (response.ok) {
             console.log('add cartitem');
-            window.location.href = "{% url 'home' %}";
+            window.location.href = "{% url 'menu' %}";
          } else {
             throw new Error('invalid cart data');
          }
