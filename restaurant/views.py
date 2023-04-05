@@ -22,7 +22,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 
 from .models import Booking, Category, MenuItem, Cart, Order 
-from .serializers import (UserSerializer, UserCreateSerializer, 
+from .serializers import (CustomUserSerializer, UserCreateSerializer, 
                           BookingSerializer, CategorySerializer,
                           MenuItemSerializer, MenuItemCreateSerializer,
                           CartSerializer, CartCreateSerializer,
@@ -215,12 +215,30 @@ class LogoutView(TokenDestroyView):
 
 class ProfileView(APIView):
     def get(self, request):
-        print('######### here')
+        print('######### profileView')
         user = request.user
-        serialized_user = UserCreateSerializer(user)
-        print(user.username)
-        context = {'user': user}
-        return Response(serialized_user, status.HTTP_200_OK)
+        #serialized_user = UserCreateSerializer(user)
+        serialized_user = CustomUserSerializer(user)
+        print('###########', user.username, type(user.username))
+        context = serialized_user.data
+        #print('############', context, type(context))
+        response = Response(context, status.HTTP_200_OK)
+        return response
+    
+class CartProfileView(APIView):
+    def get(self, request):
+        print('########## CartProfileView')
+        carts = Cart.objects.filter(user=request.user)
+        serialized_carts = CartSerializer(carts, many=True)
+        print('##########', carts, type(carts))
+        context = serialized_carts.data
+        response = Response(context, status.HTTP_200_OK)
+        return response
+    
+class ProfilePageView(APIView):
+    def get(self, request):
+        print('########### getProfileView')
+        return render(request, 'profile.html')
 
 class SingleUserView(UserViewSet):
     def retrieve(self, request, *args, **kwargs):

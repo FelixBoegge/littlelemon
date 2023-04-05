@@ -1,16 +1,20 @@
-{% extends 'base.html' %} 
 {% load static %} 
 {% block content %}
 
 <section>
     <article>
-        <h1>{{ data.first_name }} {{ data.last_name }}</h1>
+        <h1>{{ first_name }} ??? {{ last_name }}</h1>
         <!--Begin row-->
         <div class="row">
             <!--Begin col-->
             <div class="column">
+                <h2>Username: {{ user.username }}</h2>
+                <h2>Username: {{ context.username }}</h2>
                 <h2>Username: {{ data.username }}</h2>
-                <p>User ID: {{ data.id }}</p>
+                <h2>Username: {{ username }}</h2>
+
+
+                <p>User ID: {{ id }}</p>
                 <p>First Name: {{ data.first_name }}</p>
                 <p>Last Name: {{ data.last_name }}</p>
                 <p>Email Address: {{ data.email }}</p>
@@ -19,6 +23,24 @@
         </div>
         <!--End row-->
     </article>
+    <article>
+        <h1>Your Cart</h1>
+        {% for item in cartItems %}
+        <div class="row">
+          <div class="column">{{ item.menuitem.title }}</div>
+          <div class="column">{{ item.quantity }}</div>
+          <div class="column">${{ item.price }}</div>
+          <div class="column">
+            <div id="category_img_container">
+                <a href="{% url 'menuitem' pk=item.menuitem.id %}">
+                    <img src="/../static/img/menuitems/{{item.menuitem.title}}.jpg" alt="{{ item.menuitem.title }}" id="category_img">
+                </a>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </article>
 </section>
+
 
 {% endblock %}

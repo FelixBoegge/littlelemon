@@ -37,6 +37,7 @@
   </head>
 
   <body>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars/dist/handlebars.min.js"></script>
     {% include 'partials/_header.html' %}
     <main id="content">
       {% block content %} {% endblock %}
@@ -214,21 +215,48 @@
       const username = getCookie('username');
       console.log(username);
       console.log(typeof username);
-      fetch("{% url 'userprofile' %}", {
-        method: 'GET',
-        headers: {
-        'Authorization': `Token ${getCookie('authToken')}`,
-        'X-CSRFToken': getCookie('csrftoken')
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        const template = Handlebars.compile('profile.html');
-        const rendered = template(data);
-        document.querySelector('#content').innerHTML = rendered;
+      
+      fetch("{% url 'get_profile' %}")
+      .then(response => response.text())
+      .then(templateString => {
+        const template = Handlebars.compile(templateString);
+      
+        fetch("{% url 'userprofile' %}", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${getCookie('authToken')}`,
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+        .then(response => response.json())
+        .then(profile => {
+          fetch("{% url 'cart_profile' %}", {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Token ${getCookie('authToken')}`,
+              'X-CSRFToken': getCookie('csrftoken')
+            }
+          })
+          .then(response => response.json())
+          .then(cartItems => {
+            context = {profile, cartItems};
+            console.log(context);
+          const renderedTemplate = template(context);
+          console.log(renderedTemplate);
+          document.querySelector('#content').innerHTML = renderedTemplate;
+          })
+          .catch(error => {
+            console.error('Error fetching carts: ', error);
+          })
+        })
+        .catch(error => {
+          console.error('Error fetching data: ', error);
+        })
       })
       .catch(error => {
-        console.error('Error fetching data: ', error);
+        console.error('Error loading template: ', error);
       })
     });
   }
