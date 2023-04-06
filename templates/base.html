@@ -208,15 +208,69 @@
     });
   }
 
-  // Profile Button   TO DO
   var profileButton = document.getElementById('navProfileButton');
   if (profileButton) {
     profileButton.addEventListener('click', function() {
       const username = getCookie('username');
-      console.log(username);
-      console.log(typeof username);
+
+      fetch("{% url 'userprofile' %}", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${getCookie('authToken')}`,
+          'X-CSRFToken': getCookie('csrftoken')
+        }
+      })
+      .then(response => response.json())
+      .then(profile => {
+        fetch("{% url 'cart_profile' %}", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${getCookie('authToken')}`,
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        })
+        .then(response => response.json())
+        .then(cartItems => {
+          context = {profile, cartItems};
+          console.log(username);
+          console.log(context);
+          fetch("{% url 'get_profile' %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'text/html'},
+            body: context
+          })
+          .then(response => response.text())
+          .then(templateString => {
+            const template = Handlebars.compile(templateString);
+            document.querySelector('#content').innerHTML = template;
+          })
+          .catch(error => {
+            console.error('Error loading template: ', error);
+          })
+        })
+        .catch(error => {
+          console.error('Error fetching cart data: ', error);
+        })
+      })
+      .catch(error => {
+        console.error('Error fetching profile data: ', error);
+      })
+    })
+  }
+
+
+  // Profile Button   TO DO
+  var profileButton = document.getElementById('navProfileButtonTemp');
+  if (profileButton) {
+    profileButton.addEventListener('click', function() {
+      const username = getCookie('username');
       
-      fetch("{% url 'get_profile' %}")
+      fetch("{% url 'get_profile' %}", {
+        method: 'GET',
+        headers: {'Content-Type': 'text/html'}
+      })
       .then(response => response.text())
       .then(templateString => {
         const template = Handlebars.compile(templateString);
@@ -243,9 +297,10 @@
           .then(cartItems => {
             context = {profile, cartItems};
             console.log(context);
-          const renderedTemplate = template(context);
-          console.log(renderedTemplate);
-          document.querySelector('#content').innerHTML = renderedTemplate;
+            console.log(template);
+            const renderedTemplate = template(context);
+            console.log(renderedTemplate);
+            document.querySelector('#content').innerHTML = renderedTemplate;
           })
           .catch(error => {
             console.error('Error fetching carts: ', error);
@@ -268,8 +323,8 @@
       fetch("{% url 'token_destroy' %}", {
         method: 'POST',
         headers: {
-        'Authorization': `Token ${getCookie('authToken')}`,
-        'X-CSRFToken': getCookie('csrftoken')
+          'Authorization': `Token ${getCookie('authToken')}`,
+          'X-CSRFToken': getCookie('csrftoken')
         }
       })
       .then(response => {

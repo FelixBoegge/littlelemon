@@ -236,6 +236,11 @@ class CartProfileView(APIView):
         return response
     
 class ProfilePageView(APIView):
+    def post(self, request):
+        context = request.data
+        print('#########', context)
+        return render(request, 'profile.html', context)
+    
     def get(self, request):
         print('########### getProfileView')
         return render(request, 'profile.html')
