@@ -2,47 +2,52 @@
 {% block content %}
 <!DOCTYPE html>
 <html>
-<section>
+  <section>
+    <h1>{{ profile.first_name }} {{ profile.last_name }}</h1>
     <article>
-        <h1>{{ profile.first_name }} ??? {{ profile.last_name }}</h1>
-        <!--Begin row-->
-        <div class="row">
-            <!--Begin col-->
-            <div class="column">
-                <h2>Username: {{ user.username }}</h2>
-                <h2>Username: {{ context.username }}</h2>
-                <h2>Username: {{ data.username }}</h2>
-                <h2>Username: {{ profile.username }}</h2>
-                <h2>Username: {{ username }}</h2>
-
-
-                <p>User ID: {{ id }}</p>
-                <p>First Name: {{ data.first_name }}</p>
-                <p>Last Name: {{ data.last_name }}</p>
-                <p>Email Address: {{ data.email }}</p>
-            </div>
-            <!--End col-->
+      <div class="row">
+        <div class="column">
+          <h2>Username: {{ profile.username }}</h2>
+          <p>User ID: {{ profile.id }}</p>
+          <p>First Name: {{ profile.first_name }}</p>
+          <p>Last Name: {{ profile.last_name }}</p>
+          <p>Email Address: {{ profile.email }}</p>
         </div>
-        <!--End row-->
+      </div>
     </article>
     <article>
-        <h1>Your Cart</h1>
-        {% for item in cartItems %}
-        <div class="row">
-          <div class="column">{{ item.menuitem.title }}</div>
-          <div class="column">{{ item.quantity }}</div>
-          <div class="column">${{ item.price }}</div>
-          <div class="column">
-            <div id="category_img_container">
-                <a href="{% url 'menuitem' pk=item.menuitem.id %}">
-                    <img src="/../static/img/menuitems/{{item.menuitem.title}}.jpg" alt="{{ item.menuitem.title }}" id="category_img">
-                </a>
-            </div>
+      <h1>Your Cart</h1>
+      {% for item in cartItems %}
+      <div class="row">
+        <div class="column">{{ item.menuitem.title }}</div>
+        <div class="column">{{ item.quantity }}</div>
+        <div class="column">${{ item.price }}</div>
+        <div class="column">
+          <div id="category_img_container">
+            <a href="{% url 'menu' %}">
+              <img src="/../static/img/menuitems/{{item.menuitem.title}}.jpg" alt="{{ item.menuitem.title }}" id="category_img">
+            </a>
           </div>
         </div>
-        {% endfor %}
-      </article>
-</section>
+      </div>
+      {% endfor %}
+    </article>
+    <article>
+      <h1>Your Reservations</h1>
+      <div class="row">
+        <div class="column">
+          <pre id="bookings"></pre>
+          {% for reservation in reservations %}
+          <p>
+            <h2>{{ reservation.booking_date }}</h2>
+            <div class="booking_slot">{{ reservation.booking_slot }}</div>
+            <div class="num_guests">{{ reservation.num_guests }} guests</div>
+          </p>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+  </section>
 </html>
 
 {% endblock %}

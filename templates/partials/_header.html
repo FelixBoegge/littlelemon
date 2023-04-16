@@ -8,8 +8,6 @@
     <li><button type="button" class="button" id="navAboutButton">About</button></li>
     <li><button type="button" class="button" id="navMenuButton">Menu</button></li>
     <li><button type="button" class="button" id="navBookButton">Book</button></li>
-    <li><button type="button" class="button" id="navReservationButton">Reservations</button></li>
-    <li><button type="button" class="button" id="navCartButton">Cart</button></li>
     {% if request.COOKIES.authToken %}
     <li><button type="button" class="button push" id="navProfileButton">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</button></li>
     <li><button type="button" class="button push" id="navLogoutButton">Logout</button></li>

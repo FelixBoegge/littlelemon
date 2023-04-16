@@ -11,12 +11,13 @@ urlpatterns = [
     path('menu/<int:pk>/', views.SingleMenuItemView.as_view(), name='menuitem'),
     path('book/', views.BookView.as_view(), name='book'),
     path('bookings/', views.BookingsView.as_view(), name='bookings'),
-    path('reservations/', views.ReservationsView.as_view(), name='reservations'),
+    #path('reservations/', views.ReservationsView.as_view(), name='reservations'),
+
     
     path('signupform/', views.SignupFormView.as_view(), name='signupform'),
-    path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
+    #path('profile/', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
     #path('profile/<str:username>', views.SingleUserView.as_view({'get': 'retrieve'}), name='profile'),
-    path('getProfile/', views.ProfilePageView.as_view(), name='get_profile'),
+    path('profile/', views.ProfilePageView.as_view(), name='profile'),
     path('userprofile/', views.ProfileView.as_view(), name='userprofile'),
     path('loginform/', views.LoginFormView.as_view(), name='loginform'),
     #path('get-auth-token/', views.get_auth_token, name='get_auth_token'),
@@ -26,7 +27,9 @@ urlpatterns = [
     path('token/logout/', views.LogoutView.as_view(), name='token_destroy'),
     
     path('cartprofile/', views.CartProfileView.as_view(), name='cart_profile'),
+    path('reservationsprofile/', views.ReservationsProfileView.as_view(), name='reservations_profile'),
     path('cart/', views.CartView.as_view(), name='cart'),
+
      
     path('manager/', views.ManagerView.as_view()),
     path('delivery/', views.DeliveryView.as_view()),

@@ -12,6 +12,8 @@ from django.views.generic.edit import FormView
 from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from djoser.utils import login_user, logout_user
 from djoser.conf import settings
+from django.template.loader import render_to_string
+
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -215,39 +217,40 @@ class LogoutView(TokenDestroyView):
 
 class ProfileView(APIView):
     def get(self, request):
-        print('######### profileView')
         user = request.user
-        #serialized_user = UserCreateSerializer(user)
         serialized_user = CustomUserSerializer(user)
-        print('###########', user.username, type(user.username))
         context = serialized_user.data
-        #print('############', context, type(context))
         response = Response(context, status.HTTP_200_OK)
         return response
     
 class CartProfileView(APIView):
     def get(self, request):
-        print('########## CartProfileView')
         carts = Cart.objects.filter(user=request.user)
         serialized_carts = CartSerializer(carts, many=True)
-        print('##########', carts, type(carts))
         context = serialized_carts.data
+        response = Response(context, status.HTTP_200_OK)
+        return response
+    
+
+class ReservationsProfileView(APIView):
+    def get(self, request):
+        reservations = Booking.objects.filter(user=request.user)
+        serialized_reservations = BookingSerializer(reservations, many=True)
+        context = serialized_reservations.data
         response = Response(context, status.HTTP_200_OK)
         return response
     
 class ProfilePageView(APIView):
     def post(self, request):
-        context = request.data
-        print('#########', context)
-        return render(request, 'profile.html', context)
+        context = json.loads(request.body)
+        rendered_profile = render_to_string("profile.html", context)
+        return HttpResponse(rendered_profile)
     
     def get(self, request):
-        print('########### getProfileView')
         return render(request, 'profile.html')
 
 class SingleUserView(UserViewSet):
     def retrieve(self, request, *args, **kwargs):
-        print('######### here')
         user = request.user
         print(user.username)
         context = {'user': user}
