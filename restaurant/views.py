@@ -45,7 +45,7 @@ class AuthorizationView(APIView):
         else:
             return HttpResponse(status.HTTP_401_UNAUTHORIZED)
 
-class HomeView(APIView):
+class RenderHomeView(APIView):
     def get(self, request):
         context = {}
         if request.user.is_authenticated:
@@ -53,7 +53,7 @@ class HomeView(APIView):
             context = {'Authentication': 'Token ' + token}
         return render(request, 'index.html', context)
 
-class AboutView(APIView):
+class RenderAboutView(APIView):
     def get(self, request):
         context = {}
         if request.user.is_authenticated:
@@ -61,7 +61,7 @@ class AboutView(APIView):
             context = {'Authentication': 'Token ' + token}
         return render(request, 'about.html', context)
 
-class MenuView(APIView):
+class RenderMenuView(APIView):
     def get(self, request):
         context = {}
         if request.user.is_authenticated:
@@ -71,7 +71,7 @@ class MenuView(APIView):
         context['menu'] = categories
         return render(request, 'menu.html', context)
 
-class CategoryView(APIView):
+class RenderCategoryView(APIView):
     def get(self, request, category):
         items = MenuItem.objects.all()
         if category:
@@ -81,7 +81,7 @@ class CategoryView(APIView):
                    'category': category_name}
         return render(request, 'category.html', context)
 
-class SingleMenuItemView(APIView):
+class RenderSingleMenuItemView(APIView):
     def get(self, request, pk):
         if pk: 
             menuitem = MenuItem.objects.get(pk=pk) 
@@ -89,7 +89,46 @@ class SingleMenuItemView(APIView):
             menuitem = "" 
         return render(request, 'menuitem.html', {"menuitem": menuitem}) 
 
-class BookView(APIView):
+class CartView(APIView):
+    def get(self, request):
+        carts = Cart.objects.filter(user=request.user)
+        serialized_carts = CartSerializer(carts, many=True)
+        context = serialized_carts.data
+        response = Response(context, status.HTTP_200_OK)
+        return response
+    
+    @csrf_exempt
+    def post(self, request):
+        data = json.load(request)
+        user = request.user
+        menuitem = MenuItem.objects.get(title=data['menuitem'])
+        exist = Cart.objects.filter(user=user).filter(menuitem=menuitem).exists()
+        if exist == False:
+            quantity = int(data['num_items'])
+            unit_price = MenuItem.objects.get(pk=menuitem.id).price
+            price = quantity * unit_price
+            cart_item = Cart(
+                user = user,
+                menuitem =  menuitem,
+                quantity = quantity,
+                unit_price = unit_price,
+                price = price
+            )
+            cart_item.save()
+            return HttpResponse(status.HTTP_200_OK)
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+        
+    
+    def delete(self, request):
+        cart_items = Cart.objects.filter(user=request.user)
+        num_cart_items = len(cart_items)
+        if num_cart_items == 0:
+            return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
+        cart_items.delete()
+        return Response({'status': f'successfully deleted {num_cart_items} cartitems from cart'}, status.HTTP_200_OK)
+
+class RenderBookView(APIView):
     form = BookingForm()
     
     def get(self, request):
@@ -126,64 +165,32 @@ class BookingsView(APIView):
         serialized_bookings = serializers.serialize('json', bookings)
         return HttpResponse(serialized_bookings, content_type='application/json')
 
-class ReservationsView(APIView):
-    #permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        date = request.GET.get('date',datetime.today().date())
-        bookings = Booking.objects.filter(user=User.objects.get(username='lukas'))
-        return render(request, 'bookings.html', {'bookings': bookings})
-    
-class CartView(APIView):
-    #permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        #user_id = Token.objects.get(key=request.auth.key).user_id
-        cart_items = Cart.objects.filter(user=User.objects.get(username='lukas'))
-        serialized_cart_items = CartSerializer(cart_items, many=True)
-        #return Response(serializer.data, status.HTTP_200_OK)
-        context = {'cart_items': cart_items}
-        return render(request, 'cart.html', context)
-    
-    @csrf_exempt
-    def post(self, request):
-        data = json.load(request)
-        user = request.user
-        menuitem = MenuItem.objects.get(title=data['menuitem'])
-        exist = Cart.objects.filter(user=user).filter(menuitem=menuitem).exists()
-        if exist == False:
-            quantity = int(data['num_items'])
-            unit_price = MenuItem.objects.get(pk=menuitem.id).price
-            price = quantity * unit_price
-            cart_item = Cart(
-                user = user,
-                menuitem =  menuitem,
-                quantity = quantity,
-                unit_price = unit_price,
-                price = price
-            )
-            cart_item.save()
-            return HttpResponse(status.HTTP_200_OK)
-        else:
-            return HttpResponse("{'error':1}", content_type='application/json')
-        
-    
-    def delete(self, request):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        carts = Cart.objects.filter(user=user_id)
-        num_carts = len(carts)
-        if num_carts == 0:
-            return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
-        carts.delete()
-        return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
-
-class SignupFormView(FormView):
+# ---------------------------------------SignUp, Login, Logout, ProfilePage-------------------------------------------
+class RenderSignupFormView(FormView):
     template_name = 'signup.html'
     form_class = SignupForm
     def form_valid(self, form):
         return super().form_valid(form)
 
-class LoginFormView(FormView):
+class UsersView(APIView):
+    @csrf_exempt
+    def post(self, request):
+        new_user_data = json.load(request)
+        exist = User.objects.filter(username=new_user_data['username']).exists()
+        if exist==False:
+            new_user = User(
+                username = new_user_data['username'],
+                first_name = new_user_data['first_name'],
+                last_name = new_user_data['last_name'],
+                email = new_user_data['email'],
+                password = new_user_data['password'],
+            )
+            new_user.save()
+            return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
+        else:
+            return HttpResponse("{'error':1}", content_type='application/json')
+
+class RenderLoginFormView(FormView):
     template_name = 'login.html'
     form_class = LoginForm
     def form_valid(self, form):
@@ -205,7 +212,6 @@ class LoginView(TokenCreateView):
        
 class LogoutView(TokenDestroyView):
     def post(self, request):
-        print('###########', 'logout')
         logout_user(request)
         response = HttpResponseRedirect(reverse('loginform'))
         response.delete_cookie('authToken')
@@ -215,7 +221,7 @@ class LogoutView(TokenDestroyView):
         response.delete_cookie('email')
         return response
 
-class ProfileView(APIView):
+class ProfileInformationView(APIView):
     def get(self, request):
         user = request.user
         serialized_user = CustomUserSerializer(user)
@@ -223,16 +229,7 @@ class ProfileView(APIView):
         response = Response(context, status.HTTP_200_OK)
         return response
     
-class CartProfileView(APIView):
-    def get(self, request):
-        carts = Cart.objects.filter(user=request.user)
-        serialized_carts = CartSerializer(carts, many=True)
-        context = serialized_carts.data
-        response = Response(context, status.HTTP_200_OK)
-        return response
-    
-
-class ReservationsProfileView(APIView):
+class ProfileReservationsInformationView(APIView):
     def get(self, request):
         reservations = Booking.objects.filter(user=request.user)
         serialized_reservations = BookingSerializer(reservations, many=True)
@@ -240,136 +237,33 @@ class ReservationsProfileView(APIView):
         response = Response(context, status.HTTP_200_OK)
         return response
     
-class ProfilePageView(APIView):
+class RenderProfilePageView(APIView):
     def post(self, request):
         context = json.loads(request.body)
         rendered_profile = render_to_string("profile.html", context)
         return HttpResponse(rendered_profile)
-    
+
+# --------------------------------------------------------------------------------
+class BookingView(APIView):    
     def get(self, request):
-        return render(request, 'profile.html')
-
-class SingleUserView(UserViewSet):
-    def retrieve(self, request, *args, **kwargs):
-        user = request.user
-        print(user.username)
-        context = {'user': user}
-        return render(request, 'profile.html', context)
-    #@action(["get", "put", "patch", "delete"], detail=False)
-    #def me(self, request, *args, **kwargs):
-    #    self.get_object = self.get_instance
-    #    if request.method == "GET":
-    #        context = {'data': self.retrieve(request, *args, **kwargs)}
-    #        print('###########', 'ME')
-    #        return render(request, 'profile.html', context)
-    #    elif request.method == "PUT":
-    #        return self.update(request, *args, **kwargs)
-    #    elif request.method == "PATCH":
-    #        return self.partial_update(request, *args, **kwargs)
-    #    elif request.method == "DELETE":
-    #        return self.destroy(request, *args, **kwargs)
-
-class UsersView(APIView):
-    @csrf_exempt
-    def post(self, request):
-        new_user_data = json.load(request)
-        exist = User.objects.filter(username=new_user_data['username']).exists()
-        if exist==False:
-            new_user = User(
-                username = new_user_data['username'],
-                first_name = new_user_data['first_name'],
-                last_name = new_user_data['last_name'],
-                email = new_user_data['email'],
-                password = new_user_data['password'],
-            )
-            #serializer = UserCreateSerializer(data=new_user)
-            #if serializer.is_valid():
-            new_user.save()
-            return Response({'status': 'succesfully registered'}, status.HTTP_201_CREATED)
-        else:
-            return HttpResponse("{'error':1}", content_type='application/json')
-
-
-
-
-class ManagerView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        managers = User.objects.all().filter(groups__name='Manager')
-        serializer = UserCreateSerializer(managers, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
+        reservartions = Booking.objects.all()
+        serialized_reserations = BookingSerializer(reservartions, many=True)
+        return Response(serialized_reserations.data, status.HTTP_200_OK)
     
     def post(self, request):
-        user = User.objects.get(username=request.data['username'])
-        if not user:
-            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        new_manager = user
-        managers = Group.objects.get(name='Manager')
-        if new_manager.groups.filter(name='Manager').exists():
-           return Response({'status': f"'{new_manager.username}' is already in manager group"}, status.HTTP_200_OK)
-        managers.user_set.add(new_manager)
-        return Response({'status': f"'{new_manager.username}' was added to manager group"}, status.HTTP_200_OK)
-    
-    def delete(self, request):
-        user = User.objects.get(username=request.data['username'])
-        if not user:
-            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        old_manager = user
-        managers = Group.objects.get(name='Manager')
-        if not old_manager.groups.filter(name='Manager').exists():
-           return Response({'status': f"'{old_manager.username}' is not in manager group"}, status.HTTP_200_OK)
-        managers.user_set.remove(old_manager)
-        return Response({'status': f"'{old_manager.username}' was removed to manager group"}, status.HTTP_200_OK)
-
-class DeliveryView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        delivery_guys = User.objects.all().filter(groups__name='Delivery')
-        serializer = UserCreateSerializer(delivery_guys, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-    
-    def post(self, request):
-        user = User.objects.get(username=request.data['username'])
-        if not user:
-            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        new_delivery_guy = user
-        delivery_guys = Group.objects.get(name='Delivery')
-        if new_delivery_guy.groups.filter(name='Delivery').exists():
-           return Response({'status': f"'{new_delivery_guy.username}' is already in delivery group"}, status.HTTP_200_OK)
-        delivery_guys.user_set.add(new_delivery_guy)
-        return Response({'status': f"'{new_delivery_guy.username}' was added to delivery group"}, status.HTTP_200_OK)
-    
-    def delete(self, request):
-        user = User.objects.get(username=request.data['username'])
-        if not user:
-            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
-        old_delivery_guy = user
-        delivery_guys = Group.objects.get(name='Delivery')
-        if not old_delivery_guy.groups.filter(name='Delivery').exists():
-           return Response({'status': f"'{old_delivery_guy.username}' is not in delivery group"}, status.HTTP_200_OK)
-        delivery_guys.user_set.remove(old_delivery_guy)
-        return Response({'status': f"'{old_delivery_guy.username}' was removed to delivery group"}, status.HTTP_200_OK)
-
-class BookingView(APIView):
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        bookings = Booking.objects.all()
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
-    
-    def post(self, request):
-        serializer = BookingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
+        serialized_reserations = BookingSerializer(data=request.data)
+        if serialized_reserations.is_valid():
+            serialized_reserations.save(user=request.user)
             return Response({'status': 'successfully booked a table',
-                             'data': serializer.data}, status.HTTP_201_CREATED)
+                             'data': serialized_reserations.data}, status.HTTP_201_CREATED)
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
 
-class SingleBookingView(APIView):
+class SingleBookingView(APIView): #TO DO
     pass
+
+
+
+
 
 class Category2View(APIView):
     permission_classes = [IsAuthenticated]
@@ -445,17 +339,12 @@ class SingleMenuView(APIView):
         get_object_or_404(MenuItem, pk=pk).delete()
         return Response({'status': 'successfully deleted menuitem'}, status.HTTP_200_OK)
     
-class CartAPIView(APIView):
+class ManualCartAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def get(self, request):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        carts = Cart.objects.filter(user=user_id)
-        serializer = CartSerializer(carts, many=True)
-        return Response(serializer.data, status.HTTP_200_OK)
         
     def post(self, request):
-        user_id = Token.objects.get(key=request.auth.key).user_id
+        user_id = User.objects.get(request.user).user_id
         menuitem_id = MenuItem.objects.get(title=request.data['menuitem']).pk
         quantity = int(request.data['quantity'])
         unit_price = MenuItem.objects.get(pk=menuitem_id).price
@@ -475,13 +364,18 @@ class CartAPIView(APIView):
         return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
-        user_id = Token.objects.get(key=request.auth.key).user_id
-        carts = Cart.objects.filter(user=user_id)
-        num_carts = len(carts)
-        if num_carts == 0:
+        user_id = User.objects.get(request.user).user_id
+        cart_items = Cart.objects.filter(user=user_id)
+        num_cart_items = len(cart_items)
+        if num_cart_items == 0:
             return Response({'status': 'no cartitems in cart'}, status.HTTP_200_OK)
-        carts.delete()
-        return Response({'status': f'successfully deleted {num_carts} cartitems from cart'}, status.HTTP_200_OK)
+        cart_items.delete()
+        return Response({'status': f'successfully deleted {num_cart_items} cartitems from cart'}, status.HTTP_200_OK)
+
+
+
+
+
 
 class OrderView(APIView):
     permission_classes = [IsAuthenticated]
@@ -595,3 +489,63 @@ class SingleOrderView(APIView):
             return Response({'status': 'not your order or no manager privileges'}, status.HTTP_403_FORBIDDEN)
         order.delete()
         return Response({'status': 'successfully delete order'}, status.HTTP_200_OK)
+    
+class ManagerView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        managers = User.objects.all().filter(groups__name='Manager')
+        serializer = UserCreateSerializer(managers, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+    
+    def post(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if not user:
+            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
+        new_manager = user
+        managers = Group.objects.get(name='Manager')
+        if new_manager.groups.filter(name='Manager').exists():
+           return Response({'status': f"'{new_manager.username}' is already in manager group"}, status.HTTP_200_OK)
+        managers.user_set.add(new_manager)
+        return Response({'status': f"'{new_manager.username}' was added to manager group"}, status.HTTP_200_OK)
+    
+    def delete(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if not user:
+            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
+        old_manager = user
+        managers = Group.objects.get(name='Manager')
+        if not old_manager.groups.filter(name='Manager').exists():
+           return Response({'status': f"'{old_manager.username}' is not in manager group"}, status.HTTP_200_OK)
+        managers.user_set.remove(old_manager)
+        return Response({'status': f"'{old_manager.username}' was removed to manager group"}, status.HTTP_200_OK)
+
+class DeliveryView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        delivery_guys = User.objects.all().filter(groups__name='Delivery')
+        serializer = UserCreateSerializer(delivery_guys, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+    
+    def post(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if not user:
+            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
+        new_delivery_guy = user
+        delivery_guys = Group.objects.get(name='Delivery')
+        if new_delivery_guy.groups.filter(name='Delivery').exists():
+           return Response({'status': f"'{new_delivery_guy.username}' is already in delivery group"}, status.HTTP_200_OK)
+        delivery_guys.user_set.add(new_delivery_guy)
+        return Response({'status': f"'{new_delivery_guy.username}' was added to delivery group"}, status.HTTP_200_OK)
+    
+    def delete(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if not user:
+            return Response({'status': f"user with username = '{request.data['username']}' not found"}, status.HTTP_404_NOT_FOUND)
+        old_delivery_guy = user
+        delivery_guys = Group.objects.get(name='Delivery')
+        if not old_delivery_guy.groups.filter(name='Delivery').exists():
+           return Response({'status': f"'{old_delivery_guy.username}' is not in delivery group"}, status.HTTP_200_OK)
+        delivery_guys.user_set.remove(old_delivery_guy)
+        return Response({'status': f"'{old_delivery_guy.username}' was removed to delivery group"}, status.HTTP_200_OK)

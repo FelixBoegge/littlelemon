@@ -64,61 +64,6 @@
     return cookieValue;
   }
 
-  // Home button
-  document.getElementById('navHomeButton').addEventListener('click', function() {
-    fetch("{% url 'check_authorization' %}", {
-      method: 'GET',
-      headers: {
-        'Authorization': `Token ${getCookie('authToken')}`,
-        'X-CSRFToken': getCookie('csrftoken')
-      }
-    })
-    .then(response => {
-      window.location.href = "{% url 'home' %}";
-    })
-    .catch(error => {
-      console.error(error);
-    })
-  });
-
-  // About button
-  document.getElementById('navAboutButton').addEventListener('click', function() {
-    fetch("{% url 'check_authorization' %}", {
-      method: 'GET',
-      headers: {
-        'Authorization': `Token ${getCookie('authToken')}`,
-        'X-CSRFToken': getCookie('csrftoken')
-      }
-    })
-    .then(response => {
-      window.location.href = "{% url 'about' %}";
-    })
-    .catch(error => {
-      console.error(error);
-    })
-  });
-
-  // Menu button
-  document.getElementById('navMenuButton').addEventListener('click', function() {
-    fetch("{% url 'check_authorization' %}", {
-      method: 'GET',
-      headers: {
-        'Authorization': `Token ${getCookie('authToken')}`,
-        'X-CSRFToken': getCookie('csrftoken')
-      }
-    })
-    .then(response => {
-      if (response.ok) {
-        window.location.href = "{% url 'menu' %}";
-      } else {
-        throw new Error("Authentication failed");
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      window.location.href = "{% url 'loginform' %}";
-    })
-  });
 
   // Book Button
   document.getElementById('navBookButton').addEventListener('click', function() {
@@ -141,7 +86,6 @@
       window.location.href = "{% url 'loginform' %}";
     })
   });
-
 
   // Login Button
   var loginButton = document.getElementById('navLoginButton');
@@ -179,7 +123,7 @@
       })
       .then(response => response.json())
       .then(profile => {
-        fetch("{% url 'cart_profile' %}", {
+        fetch("{% url 'cart' %}", {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -189,7 +133,7 @@
         })
         .then(response => response.json())
         .then(cartItems => {
-          fetch("{% url 'reservations_profile' %}", {
+          fetch("{% url 'bookings' %}", {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -200,10 +144,6 @@
           .then(response => response.json())
           .then(reservations => {
             context = {profile, cartItems, reservations};
-            console.log(username);
-            console.log(profile);
-            console.log(context);
-            console.log(reservations);
             fetch("{% url 'profile' %}", {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
@@ -212,6 +152,7 @@
             .then(response => response.text())
             .then(profilePage => {
               document.querySelector('#content').innerHTML = profilePage;
+              window.history.pushState(null, null, "{% url 'profile' %}")
             })
             .catch(error => {
               console.error('Error loading template: ', error);
