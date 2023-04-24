@@ -6,7 +6,7 @@
   <ul class="main-nav">
     <li><button type="button" class="button" id="navHomeButton" onclick="window.location.href='{% url 'home' %}'">Home</button></li>
     <li><button type="button" class="button" id="navAboutButton" onclick="window.location.href='{% url 'about' %}'">About</button></li>
-    <li><button type="button" class="button" id="navMenuButton" onclick="window.location.href='{% url 'menu' %}'">Menu</button></li>
+    <li><button type="button" class="button" id="navMenuButton">Menu</button></li>
     <li><button type="button" class="button" id="navBookButton">Book</button></li>
     {% if request.COOKIES.authToken %}
     <li><button type="button" class="button push" id="navProfileButton">{{ request.COOKIES.firstName }} {{ request.COOKIES.lastName }}</button></li>

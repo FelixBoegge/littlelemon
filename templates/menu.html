@@ -1,4 +1,3 @@
-{% extends 'base.html' %}
 {% load static %}
 {% block content %}
 
@@ -9,12 +8,12 @@
             <a href="{% url 'home' %}">Home</a> /
          </span>
          <div class="row">
-            {% for category in menu %}
+            {% for category in categories %}
             <div class="column">
                 <p>
                     <div id="category_img_container">
                         <h2 id="category_title">{{ category.title }}</h2>
-                        <a href="{% url 'categories' category=category.slug  %}">
+                        <a href="{% url 'render_category' category=category.slug  %}">
                             <img src="/../static/img/categories/{{category.slug}}.jpg" alt="{{ category.title }}" id="category_img"/>
                         </a>
                     </div>

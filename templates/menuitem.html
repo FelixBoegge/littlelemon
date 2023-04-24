@@ -7,8 +7,8 @@
       <h1 id="item_name">{{ menuitem.title }}</h1>
       <span>
          <a href="{% url 'home' %}">Home</a> /
-         <a href="{% url 'menu' %}">Menu</a>/
-         <a href="{% url 'categories' category=menuitem.category.slug %}">{{ menuitem.category.title }}</a>
+         <a href="{% url 'render_menu' %}">Menu</a>/
+         <a href="{% url 'render_category' category=menuitem.category.slug %}">{{ menuitem.category.title }}</a>
       </span>
       <!--Begin row-->
       <div class="row">
@@ -60,7 +60,7 @@
       .then(response => {
          if (response.ok) {
             console.log('add cartitem');
-            window.location.href = "{% url 'menu' %}";
+            window.location.href = "{% url 'home' %}";
          } else {
             throw new Error('invalid cart data');
          }

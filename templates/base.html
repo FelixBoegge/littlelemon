@@ -64,6 +64,32 @@
     return cookieValue;
   }
 
+  // Menu button
+  document.getElementById('navMenuButton').addEventListener('click', function() {
+    fetch("{% url 'categories' %}", {
+      method: 'GET'
+    })
+    .then(response => response.json())
+    .then(categories => {
+      context = {categories};
+      fetch("{% url 'render_menu' %}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(context)
+      })
+      .then(response => response.text())
+      .then(menuPage => {
+        document.querySelector('#content').innerHTML = menuPage;
+        window.history.pushState(null, null, "{% url 'render_menu' %}")
+      })
+      .catch(error => {
+        console.error('Error loading template: ', error);
+      })
+    })
+    .catch(error => {
+      console.error('Error fetching menu data: ', error);
+    })
+  });
 
   // Book Button
   document.getElementById('navBookButton').addEventListener('click', function() {
