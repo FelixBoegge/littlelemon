@@ -164,6 +164,7 @@ input{
 
 #category_img_container {
     padding: 15px;
+    max-width: 200px;
 }
 
 #category_title {

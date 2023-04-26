@@ -3,51 +3,73 @@
 <!DOCTYPE html>
 <html>
   <section>
-    <h1>{{ profile.first_name }} {{ profile.last_name }}</h1>
     <article>
-      <div class="row">
-        <div class="column">
-          <h2>Username: {{ profile.username }}</h2>
-          <p>User ID: {{ profile.id }}</p>
-          <p>First Name: {{ profile.first_name }}</p>
-          <p>Last Name: {{ profile.last_name }}</p>
-          <p>Email Address: {{ profile.email }}</p>
-        </div>
-      </div>
-    </article>
-    <article>
-      <h1>Your Cart</h1>
-      {% for item in cartItems %}
-      <div class="row">
-        <div class="column">{{ item.menuitem.title }}</div>
-        <div class="column">{{ item.quantity }}</div>
-        <div class="column">${{ item.price }}</div>
-        <div class="column">
-          <div id="category_img_container">
-            <a href="{% url 'home' %}">
-              <img src="/../static/img/menuitems/{{item.menuitem.title}}.jpg" alt="{{ item.menuitem.title }}" id="category_img">
-            </a>
+      <h1>{{ profile.first_name }} {{ profile.last_name }}</h1>
+        <div class="row">
+          <div class="column">
+            <h2>Username: {{ profile.username }}</h2>
+            <p>User ID: {{ profile.id }}</p>
+            <p>First Name: {{ profile.first_name }}</p>
+            <p>Last Name: {{ profile.last_name }}</p>
+            <p>Email Address: {{ profile.email }}</p>
           </div>
         </div>
-      </div>
-      {% endfor %}
-    </article>
-    <article>
-      <h1>Your Reservations</h1>
-      <div class="row">
-        <div class="column">
-          <pre id="bookings"></pre>
-          {% for reservation in reservations %}
+      <h1>Your Cart</h1>
+      <div class="column">
+        {% for item in cartItems %}
+        <div class="row">
+          <h2>{{ item.menuitem.title }}</h2>
+          <p>{{ item.quantity }}</p>
+          <p>${{ item.price }}</p>
           <p>
-            <h2>{{ reservation.booking_date }}</h2>
-            <div class="booking_slot">{{ reservation.booking_slot }}</div>
-            <div class="num_guests">{{ reservation.num_guests }} guests</div>
+            <div id="category_img_container">
+              <a href="{% url 'home' %}">
+                <img src="/../static/img/menuitems/{{item.menuitem.title}}.jpg" alt="{{ item.menuitem.title }}" id="category_img">
+              </a>
+            </div>
           </p>
-          {% endfor %}
         </div>
+        {% endfor %}
+        <button type="button" id="makeOrderButton">Order</button>
+      </div>
+      <h1>Your Reservations</h1>
+      <div class="column">
+        {% for reservation in reservations %}
+        <div class="row">
+          <pre id="bookings"></pre>
+          <h2>{{ reservation.booking_date }}</h2>
+          <p class="booking_slot">   {{ reservation.booking_slot }}   </p>
+          <p class="num_guests">{{ reservation.num_guests }} guests</p>
+        </div>
+        {% endfor %}
       </div>
     </article>
   </section>
 </html>
+
+<script>
+  document.getElementById('makeOrderButton').addEventListener('click', function (e) {
+    fetch("{% url 'order' %}", {
+      method: 'POST',
+      headers: {
+       'Authorization': `Token ${getCookie('authToken')}`,
+       'X-CSRFToken': getCookie('csrftoken')
+      }
+    })
+    .then(response => {
+      console.log('test order');
+      if (response.ok) {
+        console.log('make order');
+        window.location.href = "{% url 'home' %}";
+      } else {
+        throw new Error('invalid data');
+      }
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  })
+
+</script>
 
 {% endblock %}

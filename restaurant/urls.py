@@ -24,23 +24,20 @@ urlpatterns = [
     path('profile/', views.RenderProfilePageView.as_view(), name='profile'),
 
     # raw data APIs
-    path('booking/', views.BookingView.as_view()),
-    path('booking/<int:pk>', views.SingleBookingView.as_view()), # TO DO
+    path('booking/', views.BookingView.as_view(), name='booking'),
+    path('booking/<str:username>', views.SingleBookingView.as_view(), name='single_booking'),
     path('category/', views.CategoryView.as_view(), name='categories'),
-    path('category/<int:pk>', views.SingleCategoryView.as_view()),
+    path('category/<str:category>', views.SingleCategoryView.as_view(), name='single_category'),
     path('menuitem/', views.MenuItemView.as_view(), name='menuitem'),
     path('menuitem/<int:pk>', views.SingleMenuView.as_view()),
     path('cart/', views.CartView.as_view(), name='cart'),
     path('bookings/', views.BookingsView.as_view(), name='bookings'),
-    
     path('cartAPI/', views.ManualCartAPIView.as_view()),
 
-    
-    
-    
-    
-    path('order/', views.OrderView.as_view()),
+    path('order/', views.OrderView.as_view(), name='order'),
     path('order/<int:pk>', views.SingleOrderView.as_view()),
+    
+    
     
     path('manager/', views.ManagerView.as_view()),
     path('delivery/', views.DeliveryView.as_view()),

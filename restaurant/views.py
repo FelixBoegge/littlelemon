@@ -219,20 +219,39 @@ class RenderProfilePageView(APIView):
 # ----------------------------------Fetch and manipulate data----------------------------------------------
 class BookingView(APIView):    
     def get(self, request):
-        reservartions = Booking.objects.all()
+        if not request.user == 'AnonymousUser':
+            reservartions = Booking.objects.filter(user=request.user)
+        else: 
+            reservartions = Booking.objects.all()
         serialized_reserations = BookingSerializer(reservartions, many=True)
         return Response(serialized_reserations.data, status.HTTP_200_OK)
     
     def post(self, request):
-        serialized_reserations = BookingSerializer(data=request.data)
-        if serialized_reserations.is_valid():
-            serialized_reserations.save(user=request.user)
+        exist = Booking.objects.filter(booking_date=request.data['booking_date']).filter(
+            booking_slot=request.data['booking_slot']).exists()
+        if exist:
+            return Response({'status': 'selected time slot at given date is already blocked'},
+                            status.HTTP_200_OK)
+        
+        serialized_reseration = BookingSerializer(data=request.data)
+        if serialized_reseration.is_valid():
+            serialized_reseration.save(user=request.user)
             return Response({'status': 'successfully booked a table',
-                             'data': serialized_reserations.data}, status.HTTP_201_CREATED)
-        return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
+                             'data': serialized_reseration.data}, status.HTTP_201_CREATED)
+        return Response({'status': 'provide valid data',
+                         'data': serialized_reseration.data}, status.HTTP_400_BAD_REQUEST)
 
-class SingleBookingView(APIView): #TO DO
-    pass
+class SingleBookingView(APIView):
+    def delete(self, request, username):
+        reservations_to_delete = Booking.objects.filter(name=username)
+        if reservations_to_delete:
+            num_reservations_to_delete = len(reservations_to_delete)
+            reservations_to_delete.delete()
+            return Response({'status': f"successfully deleted all ({num_reservations_to_delete}) reservations from '{username}'"},
+                            status.HTTP_200_OK)
+        else:
+            return Response({'status': 'no reservations found for given user'},
+                            status.HTTP_200_OK)
 
 class CategoryView(APIView):    
     def get(self, request):
@@ -350,24 +369,30 @@ class ManualCartAPIView(APIView):
     
         
     def post(self, request):
-        user_id = User.objects.get(request.user).user_id
         menuitem_id = MenuItem.objects.get(title=request.data['menuitem']).pk
+        
+        exist = Cart.objects.filter(menuitem=menuitem_id).filter(user=request.user).exists()
+        if exist:
+            return Response({'status': f"{request.user.username} already has {request.data['menuitem']} in his/her cart"},
+                            status.HTTP_200_OK)
+        
         quantity = int(request.data['quantity'])
         unit_price = MenuItem.objects.get(pk=menuitem_id).price
         price = quantity * unit_price
         cart_item = {
-            'user': user_id,
+            'user': request.user.id,
             'menuitem': menuitem_id,
             'quantity': quantity,
             'unit_price': unit_price,
             'price': price
         }
-        serializer = CartCreateSerializer(data=cart_item)
-        if serializer.is_valid():
-            serializer.save()
+        serialized_cartitem = CartCreateSerializer(data=cart_item)
+        if serialized_cartitem.is_valid():
+            serialized_cartitem.save()
             return Response({'status': 'successfully added cartitem',
-                             'data': serializer.data}, status.HTTP_201_CREATED)
-        return Response({'status': 'provide valid data'}, status.HTTP_400_BAD_REQUEST)
+                             'data': serialized_cartitem.data}, status.HTTP_201_CREATED)
+        return Response({'status': 'provide valid data', 
+                         'data': serialized_cartitem.data}, status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request):
         user_id = User.objects.get(request.user).user_id

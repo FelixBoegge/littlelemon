@@ -64,6 +64,9 @@ class Booking(models.Model):
     booking_date = models.DateField()
     booking_slot = models.SmallIntegerField()
     
+    class Meta:
+        unique_together = ('booking_date', 'booking_slot')
+    
     def __str__(self) -> str:
         return f'{self.user.username} {self.num_guests}guests'
     

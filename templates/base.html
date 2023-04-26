@@ -159,7 +159,7 @@
         })
         .then(response => response.json())
         .then(cartItems => {
-          fetch("{% url 'bookings' %}", {
+          fetch("{% url 'booking' %}", {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
@@ -197,7 +197,6 @@
       })
     })
   }
-
 
   // Logout Button
   var logoutButton = document.getElementById('navLogoutButton');
